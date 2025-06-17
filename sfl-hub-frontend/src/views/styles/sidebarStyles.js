@@ -66,7 +66,7 @@ export const StyledListItem = styled(ListItem, {
     color: 'white',
   },
   '&:hover': {
-    backgroundColor: '#00ACC1',
-    color: 'white',
-  },
+  backgroundColor: 'rgba(121, 175, 181, 0.4)', // same teal shade with 40% opacity
+  color: 'white',
+}
 }));

@@ -52,12 +52,15 @@ const Dashboard = () => {
         setAnchorEl(null);
     };
 
+     const toggleDrawer = (open) => () => {
+    setDrawerOpen(open);
+  };
     const halfopen = () => {
         setDrawerWidth((prevWidth) => (prevWidth === 250 ? 70 : 250));
     };
 
     const handleprofile = () => {
-        navigate('/admin/profile', { replace: true }); 
+        navigate('/admin/profile', { replace: true });
         handleMenuClose();
     };
 
@@ -80,7 +83,7 @@ const Dashboard = () => {
             navigate('/admin/shipmentlist', { replace: true });
         } else if (module === 'Get Rates') {
             navigate('/admin/getrate', { replace: true });
-        }else if (module === 'Management') {
+        } else if (module === 'Management') {
             navigate('/admin/ManagementNavigation', { replace: true });
         }
         setDrawerOpen(false);
@@ -99,14 +102,19 @@ const Dashboard = () => {
         <ShipmentProvider>
             <Root>
                 <Sidebar
-                    drawerWidth={drawerWidth}
-                    Loginname={loginName}
                     drawerOpen={drawerOpen}
-                    toggleDrawer={(open) => () => setDrawerOpen(open)}
-                    activeModule={activeModule}
+                    Loginname={loginName}
+                    toggleDrawer={toggleDrawer}
                     handleMenuOpen={handleMenuOpen}
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl)}
+                    handleMenuClose={handleMenuClose}
+                    handleLogout={handleLogout}
+                    handleprofile={handleprofile}
+                    activeModule={activeModule}
                     handleModuleClick={handleModuleClick}
-                    setDrawerOpen={setDrawerOpen}
+                    drawerWidth={drawerWidth}
+                    setDrawerWidth={setDrawerWidth}
                     account_number={accountNumber}
                 />
                 <MainContent>

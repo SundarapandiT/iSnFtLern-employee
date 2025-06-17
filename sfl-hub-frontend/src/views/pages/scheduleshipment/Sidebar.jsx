@@ -33,17 +33,19 @@ const Sidebar = ({
   open,
   handleMenuOpen,
   handleMenuClose,
+  handleprofile,
+  handleLogout,
   activeModule,
   handleModuleClick,
   setDrawerOpen,
   account_number,
 }) => {
-
-  const modules = account_number ? ['Get Rates', 'Schedule Shipment', 'My Shipment','Management'] : ['Schedule Shipment', 'My Shipment'];
+  const modules = account_number ? ['Get Rates', 'Schedule Shipment', 'My Shipment', "Management"] : ['Schedule Shipment', 'My Shipment'];
 
   const iconMap = {
     'Schedule Shipment': <LocalShippingIcon />,
     'My Shipment': <DirectionsBoatIcon />,
+    'Get Rates': <AttachMoneyIcon />,
     'Management': <GroupIcon />,
   };
 
@@ -55,7 +57,7 @@ const Sidebar = ({
         open={drawerOpen}
         onClose={toggleDrawer(false)}
       >
-        <ProfileBox >
+        <ProfileBox>
           <LogoBox>
             <img src="/sfllogo2--.png" alt="Logo" width={120} style={{ marginBottom: 10 }} />
           </LogoBox>
@@ -71,43 +73,27 @@ const Sidebar = ({
               anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
               transformOrigin={{ vertical: 'top', horizontal: 'right' }}
             >
-              <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-              <MenuItem onClick={handleMenuClose}>Logout</MenuItem>
+              <MenuItem onClick={handleprofile}>Profile</MenuItem>
+              <MenuItem onClick={handleLogout}>Logout</MenuItem>
             </Menu>
           </Box>
 
           <List>
-            {modules.map((module) => {
-              const getIcon = () => {
-                switch (module) {
-                  case 'Schedule Shipment':
-                    return <LocalShippingIcon />;
-                  case 'My Shipment':
-                    return <DirectionsBoatIcon />;
-                  case 'Management':
-                    return <GroupIcon />;
-                  default:
-                    return <AttachMoneyIcon />;
-                }
-              };
-
-              return (
-                <StyledListItem
-                  key={module}
-                  component="button"
-                  selected={activeModule === module}
-                  onClick={() => handleModuleClick(module)}
-                  active={activeModule === module}
-                >
-                  <ListItemIcon sx={{ color: 'white' }}>
-                    {getIcon()}
-                  </ListItemIcon>
-                  <ListItemText primary={module} sx={{ color: 'white' }} />
-                </StyledListItem>
-              );
-            })}
+            {modules.map((module) => (
+              <StyledListItem
+                key={module}
+                component="button"
+                selected={activeModule === module}
+                onClick={() => handleModuleClick(module)}
+                active={activeModule === module}
+              >
+                <ListItemIcon sx={{ color: 'white' }}>
+                  {iconMap[module] || <AttachMoneyIcon />}
+                </ListItemIcon>
+                <ListItemText primary={module} sx={{ color: 'white' }} />
+              </StyledListItem>
+            ))}
           </List>
-
         </ProfileBox>
       </MobileDrawer>
 
@@ -127,8 +113,6 @@ const Sidebar = ({
           />
         </LogoBox>
 
-
-
         <List>
           {modules.map((module) => (
             <StyledListItem
@@ -136,6 +120,7 @@ const Sidebar = ({
               component="button"
               selected={activeModule === module}
               onClick={() => handleModuleClick(module)}
+              active={activeModule === module}
             >
               <ListItemIcon sx={{ color: 'white', minWidth: '48px' }}>
                 {iconMap[module] || <AttachMoneyIcon />}
@@ -146,13 +131,12 @@ const Sidebar = ({
                   '& .MuiTypography-root': {
                     fontSize: '0.9rem',
                     color: 'white',
-                  }
+                  },
                 }}
               />
             </StyledListItem>
           ))}
         </List>
-
       </SidebarWrapper>
     </>
   );

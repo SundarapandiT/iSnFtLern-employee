@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Paper, Icon } from "@mui/material";
+import { Box, Typography, Paper, Icon, useMediaQuery, useTheme } from "@mui/material";
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import EditIcon from '@mui/icons-material/Edit';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -11,6 +11,9 @@ import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import TheatersIcon from '@mui/icons-material/Theaters';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import { useNavigate } from 'react-router-dom';
+//import styled from '@mui/material';
+import { ContentBox,IconBox } from '../../styles/scheduleshipmentStyle';
+import { useStyles } from '../../styles/MyshipmentStyle';
 
 const paperStyle = {
     p: 2,
@@ -20,14 +23,29 @@ const paperStyle = {
     '&:hover': { boxShadow: 3 },
     borderRadius: 1
 };
+// const IconBox = styled(Box)(({ theme }) => ({
+//   display: 'inline-flex',
+//   justifyContent: 'center',
+//   alignItems: 'center',
+//   width: 55,
+//   height: 55,
+//   // borderRadius: 7,
+//   backgroundColor: '#c30ac9',
+//   boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.3)',
+//   marginRight: theme.spacing(3),
+//   marginLeft: theme.spacing(1),
+// }));
 
 const iconStyle = {
-    mr: 3,
+    mr: 2,
     color: 'black'
 };
 
 const ManagementDashboard = () => {
+    const classes = useStyles();
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const handleManagementClick = (section) => {
         const routes = {
@@ -47,31 +65,22 @@ const ManagementDashboard = () => {
     };
 
     return (
-        <Box sx={{ p: 3, bgcolor: "#f5f5f5", borderRadius: 2, m: 2 }}>
-            <Box sx={{ p: 3, bgcolor: 'white', minHeight: '100vh' }}>
+        <ContentBox>
                 {/* Header Section */}
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                    <Icon sx={{
-                        bgcolor: '#773ba8',
-                        mr: 2,
-                        width: 56,
-                        height: 56,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}>
-                        <AssignmentIcon sx={{ color: '#fff', fontSize: 32, borderRadius: '0px' }} />
-                    </Icon>
-                    <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                        Management
-                    </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                          <Typography variant="h5" sx={{ mb: 3, fontSize: "1.3rem" }}>
+        <IconBox className="card-icon">
+          <AssignmentIcon className={classes.iconBox} />
+        </IconBox>
+        Management
+      </Typography>
                 </Box>
 
                 {/* Grid Section */}
                 <Box sx={{
                     display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' },
-                    gap: 2
+                    gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+                    gap: isMobile ? 1 : 2
                 }}>
                     {/* User */}
                     <Paper variant="outlined" sx={paperStyle} onClick={() => handleManagementClick('User')}>
@@ -127,10 +136,7 @@ const ManagementDashboard = () => {
                         <Typography>Invoices services</Typography>
                     </Paper>
                 </Box>
-            </Box>
-            
-        </Box>
-        
+            </ContentBox>
     );
 };
 
