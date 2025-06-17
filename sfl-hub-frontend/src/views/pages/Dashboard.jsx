@@ -150,6 +150,7 @@ const Dashboard = () => {
                             </Menu>
                         </Box>
                     </AppBar>
+                    <div style={{minHeight:"75vh"}}>
                     <Routes>
                         <Route
                             path="/Scheduleshipment"
@@ -185,6 +186,7 @@ const Dashboard = () => {
                             }
                         />
                     </Routes>
+                    </div>
                     <Box
                         className="footer-box"
                         sx={{
@@ -192,12 +194,13 @@ const Dashboard = () => {
                             marginRight: 3,
                             marginTop: 1,
                             marginBottom: 1,
+                            bottom:0,
                         }}
                     >
                         <Typography
                             align="center"
                             className={classes.footerTypography}
-                            sx={{ fontSize: isMobile ? '12px' : '12px' }}
+                            sx={{ fontSize: isMobile ? '12px' : '14px' }}
                         >
                             All Rights Reserved. Site Powered by{' '}
                             <span

@@ -15,32 +15,29 @@ import { useNavigate } from 'react-router-dom';
 import { ContentBox,IconBox } from '../../styles/scheduleshipmentStyle';
 import { useStyles } from '../../styles/MyshipmentStyle';
 
+const iconStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    backgroundColor: '#D3D3D3', 
+    padding: '14px 14px', 
+    margin: 0,
+    marginRight: '10px', 
+};
+
+const iconInnerStyle = {
+    color: 'black', 
+    fontSize: '24px' 
+};
+
 const paperStyle = {
-    p: 2,
     display: 'flex',
     alignItems: 'center',
     cursor: 'pointer',
-    '&:hover': { boxShadow: 3 },
-    borderRadius: 1
+    '&:hover': { boxShadow: 3 }, 
+    borderWidth: '1px',     
+    borderColor: 'black', 
+    
 };
-// const IconBox = styled(Box)(({ theme }) => ({
-//   display: 'inline-flex',
-//   justifyContent: 'center',
-//   alignItems: 'center',
-//   width: 55,
-//   height: 55,
-//   // borderRadius: 7,
-//   backgroundColor: '#c30ac9',
-//   boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.3)',
-//   marginRight: theme.spacing(3),
-//   marginLeft: theme.spacing(1),
-// }));
-
-const iconStyle = {
-    mr: 2,
-    color: 'black'
-};
-
 const ManagementDashboard = () => {
     const classes = useStyles();
     const navigate = useNavigate();
@@ -67,7 +64,7 @@ const ManagementDashboard = () => {
     return (
         <ContentBox>
                 {/* Header Section */}
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           <Typography variant="h5" sx={{ mb: 3, fontSize: "1.3rem" }}>
         <IconBox className="card-icon">
           <AssignmentIcon className={classes.iconBox} />
@@ -80,60 +77,79 @@ const ManagementDashboard = () => {
                 <Box sx={{
                     display: 'grid',
                     gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-                    gap: isMobile ? 1 : 2
+                    gap: isMobile ? 1 : 2,
+                    padding: isMobile ? 1 : 1,
                 }}>
                     {/* User */}
                     <Paper variant="outlined" sx={paperStyle} onClick={() => handleManagementClick('User')}>
-                        <AccountBoxIcon sx={iconStyle} />
-                        <Typography>User</Typography>
-                    </Paper>
+            <div style={iconStyle}>
+                <AccountBoxIcon style={iconInnerStyle} />
+            </div>
+            <Typography sx={{fontWeight:"bold"}}>User</Typography>
+        </Paper>
 
                     {/* Service */}
                     <Paper variant="outlined" sx={paperStyle} onClick={() => handleManagementClick('Service')}>
-                        <EditIcon sx={iconStyle} />
-                        <Typography>Service</Typography>
+                        <div style={iconStyle}>
+                        <EditIcon sx={iconInnerStyle} />
+                        </div>
+                        <Typography sx={{fontWeight:"bold"}}>Service</Typography>
                     </Paper>
 
                     {/* Vendor */}
                     <Paper variant="outlined" sx={paperStyle} onClick={() => handleManagementClick('Vendor')}>
-                        <FormatListBulletedIcon sx={iconStyle} />
-                        <Typography>Vendor</Typography>
+                        <div style={iconStyle}>
+                        <FormatListBulletedIcon sx={iconInnerStyle} />
+                        </div>
+                        <Typography sx={{fontWeight:"bold"}}>Vendor</Typography>
                     </Paper>
 
                     {/* Container */}
                     <Paper variant="outlined" sx={paperStyle} onClick={() => handleManagementClick('Container')}>
-                        <TheatersIcon sx={iconStyle} />
-                        <Typography>Container</Typography>
+                        <div style={iconStyle}>
+                        <TheatersIcon sx={iconInnerStyle} />
+                        </div>
+                        <Typography sx={{fontWeight:"bold"}}>Container</Typography>
                     </Paper>
 
                     {/* Lead Assignment */}
                     <Paper variant="outlined" sx={paperStyle} onClick={() => handleManagementClick('Lead Assignment')}>
-                        <ArchiveIcon sx={iconStyle} />
-                        <Typography>Lead Assignment</Typography>
+                        <div style={iconStyle}>
+                        <ArchiveIcon sx={iconInnerStyle} />
+                        </div>
+                        <Typography sx={{fontWeight:"bold"}}>Lead Assignment</Typography>
                     </Paper>
 
                     {/* Consolidation Center */}
                     <Paper variant="outlined" sx={paperStyle} onClick={() => handleManagementClick('Consolidation Center')}>
-                        <LocationOnIcon sx={iconStyle} />
-                        <Typography>Consolidation Center</Typography>
+                        <div style={iconStyle}>
+                        <LocationOnIcon sx={iconInnerStyle} />
+                        </div>
+                        <Typography sx={{fontWeight:"bold"}}>Consolidation Center</Typography>
                     </Paper>
 
                     {/* Ocean Tracking */}
                     <Paper variant="outlined" sx={paperStyle} onClick={() => handleManagementClick('Ocean Tracking')}>
-                        <WavesIcon sx={iconStyle} />
-                        <Typography>Ocean Tracking</Typography>
+                        <div style={iconStyle}>
+                        <WavesIcon sx={iconInnerStyle} />
+                        </div>
+                        <Typography sx={{fontWeight:"bold"}}>Ocean Tracking</Typography>
                     </Paper>
 
                     {/* Sales Lead - Referred By */}
                     <Paper variant="outlined" sx={paperStyle} onClick={() => handleManagementClick('Sales Lead - Referred By')}>
-                        <GroupIcon sx={iconStyle} />
-                        <Typography>Sales Lead - Referred By</Typography>
+                        <div style={iconStyle}>
+                        <GroupIcon sx={iconInnerStyle} />
+                        </div>
+                        <Typography sx={{fontWeight:"bold"}}>Sales Lead - Referred By</Typography>
                     </Paper>
 
                     {/* Invoices Services */}
                     <Paper variant="outlined" sx={paperStyle} onClick={() => handleManagementClick('Invoices services')}>
-                        <GroupIcon sx={iconStyle} />
-                        <Typography>Invoices services</Typography>
+                        <div style={iconStyle}>
+                        <GroupIcon sx={iconInnerStyle} />
+                        </div>
+                        <Typography sx={{fontWeight:"bold"}}>Invoices services</Typography>
                     </Paper>
                 </Box>
             </ContentBox>
