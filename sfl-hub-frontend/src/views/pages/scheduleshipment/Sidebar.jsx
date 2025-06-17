@@ -12,6 +12,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import DirectionsBoatIcon from '@mui/icons-material/DirectionsBoat';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import GroupIcon from '@mui/icons-material/Group';
 
 import {
   SidebarWrapper,
@@ -38,11 +39,12 @@ const Sidebar = ({
   account_number,
 }) => {
 
-  const modules = account_number ? ['Get Rates', 'Schedule Shipment', 'My Shipment'] : ['Schedule Shipment', 'My Shipment'];
+  const modules = account_number ? ['Get Rates', 'Schedule Shipment', 'My Shipment','Management'] : ['Schedule Shipment', 'My Shipment'];
 
   const iconMap = {
     'Schedule Shipment': <LocalShippingIcon />,
     'My Shipment': <DirectionsBoatIcon />,
+    'Management': <GroupIcon />,
   };
 
   return (
@@ -82,6 +84,8 @@ const Sidebar = ({
                     return <LocalShippingIcon />;
                   case 'My Shipment':
                     return <DirectionsBoatIcon />;
+                  case 'Management':
+                    return <GroupIcon />;
                   default:
                     return <AttachMoneyIcon />;
                 }

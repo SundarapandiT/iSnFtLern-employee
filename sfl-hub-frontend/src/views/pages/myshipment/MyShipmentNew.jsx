@@ -1656,7 +1656,7 @@ const Myshipmentnew = ({ setEdit }) => {
           BACK TO MY SHIPMENT
         </ResponsiveButton>
       </ButtonContainer>
-      <Box className="footer-box">
+      {/* <Box className="footer-box">
         <Typography className={classes.footerTypography} sx={{ mt: 2, fontSize: "0.75rem", textAlign: { xs: "center", sm: "right" }, }}>
           All Rights Reserved. Site Powered by{" "}
           <span
@@ -1666,7 +1666,7 @@ const Myshipmentnew = ({ setEdit }) => {
             SFL Worldwide
           </span>
         </Typography>
-      </Box>
+      </Box> */}
     </Box>
   );
 };

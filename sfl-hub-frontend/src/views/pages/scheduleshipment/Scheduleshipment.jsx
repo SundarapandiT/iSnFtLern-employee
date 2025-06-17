@@ -1,54 +1,30 @@
 import { useState, useEffect } from "react";
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate, Routes, Route } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { api, encryptURL, getStateID, getUserIP, getUserDetails } from '../../../utils/api';
 import { toast } from "react-hot-toast";
-import Myshipment from "../myshipment/Myshipment";
 import { useStyles } from "../../styles/MyshipmentStyle";
-
-// MUI Components
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import MenuItem from "@mui/material/MenuItem";
-import IconButton from "@mui/material/IconButton";
-import AppBar from "@mui/material/AppBar";
-import Menu from "@mui/material/Menu";
-import ListIcon from '@mui/icons-material/List';
-import useMediaQuery from "@mui/material/useMediaQuery";
-import useTheme from "@mui/material/styles/useTheme";
-
-// MUI Icons
-import MenuIcon from "@mui/icons-material/Menu";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-
-import Sidebar from "./Sidebar";
+import {
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
+import FlightTakeoffIcon from '@mui/icons-material/FlightTakeoff';
+import { useShipmentContext } from "../../ShipmentContext";
+import {
+  ContentBox,
+  IconBox,
+} from '../../styles/scheduleshipmentStyle';
+import CryptoJS from "crypto-js";
 import SectionTabs from "./SectionTabs";
 import PickupForm from "./PickupForm";
 import Sender from "./Sender";
 import Recipient from "./Recipient";
 import Package from "./Package";
-// import ProfilePage from "./ProfilePage";
-import { useShipmentContext } from "../../ShipmentContext";
-import {
-  Root,
-  MainContent,
-  AppBarBox,
-  DesktopToggleBtn,
-  MobileToggleBtn,
-  ContentBox,
-  IconBox,
-  UsernameButton,
-} from '../../styles/scheduleshipmentStyle';
-import Myshipmentnew from "../myshipment/MyShipmentNew";
-import CryptoJS from "crypto-js";
-import ScheduleConfirmation from "../scheduleconfirmation/ScheduleConfirmation";
-import GetRate from "../getrate/GetRate";
 
-const Schedule = () => {
-  const { fromDetails, toDetails, packageDetails, Giszip, Gresiszip, GshipmentType, isGetrate,setIsgetrate } = useShipmentContext();
+const Schedule = ({ setActiveModule, activeModule, activeTab, setActiveTab }) => {
+  const { fromDetails, toDetails, packageDetails, Giszip, Gresiszip, GshipmentType, isGetrate, setIsgetrate } = useShipmentContext();
   const navigate = useNavigate();
   const [edit, setEdit] = useState(false);
   const [confirmation, setConfirmation] = useState(false);
@@ -74,40 +50,12 @@ const Schedule = () => {
     }
   });
 
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
-
-  const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-const handleprofile=()=>{
-  // navigate("/admin/profile",{replace:true})
-  // setActiveModule("");
-  // setActiveTab("")
-  handleMenuClose()
-}
-
-  const handleLogout = () => {
-    window.location.reload();
-    navigate("/auth/login-page");
-    sessionStorage.removeItem("user");
-    sessionStorage.removeItem("PersonID");
-    sessionStorage.clear();
-    handleMenuClose();
-  };
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [formData, setFormData] = useState({
-    // Pickup
     shipmentType: "",
     fromCountry: "",
     toCountry: "",
-    // Sender
     country: "",
     countrycode: "",
     countryId: "",
@@ -125,7 +73,6 @@ const handleprofile=()=>{
     email: "",
     needsPickup: "No - I Will Drop Off My Package",
     pickupDate: "",
-    // Recipient
     recipientCountry: "",
     recipientcountrycode: "",
     recipientCountryId: "",
@@ -150,7 +97,6 @@ const handleprofile=()=>{
   const [fromoldstateid, setfromoldstateid] = useState("");
   const [recipientoldcountryid, setrecipientoldcountryid] = useState("");
   const [recipientoldstateid, setrecipientoldstateid] = useState("");
-  const [loginName, setLoginName] = useState("Unknown");
   const [userId, setUserId] = useState("");
   const [userOldid, setUserOldId] = useState("");
   const [userName, setUserName] = useState("");
@@ -203,7 +149,6 @@ const handleprofile=()=>{
   useEffect(() => {
     const storedUser = JSON.parse(sessionStorage.getItem("user"));
     if (storedUser) {
-      setLoginName(storedUser.name);
       setFormData(prev => ({
         ...prev,
         contactName: storedUser.name,
@@ -213,7 +158,7 @@ const handleprofile=()=>{
       setUserName(storedUser.username);
       setAccountNumber(storedUser.account_number);
     }
-    const  storedPersonId = sessionStorage.getItem("PersonID");
+    const storedPersonId = sessionStorage.getItem("PersonID");
     if (storedPersonId) {
       setUserOldId(storedPersonId);
     }
@@ -239,7 +184,7 @@ const handleprofile=()=>{
     setPackageType(toDetails.packageType || 'Package');
     setNoOfPackages(packageDetails.length || 1);
     setPackageData(
-     packageDetails.length > 0
+      packageDetails.length > 0
         ? packageDetails.map((pkg, index) => ({
             noOfPackages: index + 1,
             weight: pkg.weight || 0,
@@ -427,8 +372,8 @@ const handleprofile=()=>{
             .reduce((sum, item) => sum + Number(item.total_value || 0), 0)
             .toString(),
           userName: userName,
-          ServiceName: isGetrate&&fedexservice.MainServiceName || "",
-          SubServiceName: isGetrate&&fedexservice.service || "",
+          ServiceName: isGetrate && fedexservice.MainServiceName || "",
+          SubServiceName: isGetrate && fedexservice.service || "",
           managed_by: managedByResult || "0",
           ShippingID: null,
           InvoiceDueDate: null,
@@ -565,8 +510,8 @@ const handleprofile=()=>{
           duties_paid_by: dutiesPaidBy,
           total_declared_value: commercialInvoiceData ? commercialInvoiceData.reduce((sum, _, index) => sum + Number(calculateTotalValue(index) || 0), 0).toFixed(2) : "",
           userName: userName,
-          ServiceName: isGetrate&&fedexservice.MainServiceName || "",
-          SubServiceName: isGetrate&&fedexservice.service || "",
+          ServiceName: isGetrate && fedexservice.MainServiceName || "",
+          SubServiceName: isGetrate && fedexservice.service || "",
           managed_by: "",
           Old_managed_by: managedByResult || "0",
           ShippingID: null,
@@ -696,7 +641,7 @@ const handleprofile=()=>{
 
         sessionStorage.removeItem("service");
         setConfirmation(true);
-        navigate("/admin/ScheduleConfirmation", {
+        navigate("/admin/scheduleconfirmation", {
           replace: true,
           state: {
             trackingNumber: trackingNumber,
@@ -708,7 +653,7 @@ const handleprofile=()=>{
           },
         });
         resetForm();
-        setIsgetrate(false)
+        setIsgetrate(false);
       } else {
         toast.dismiss(toastId);
         throw new Error("Failed to obtain TrackingNumber");
@@ -732,22 +677,17 @@ const handleprofile=()=>{
     payment: false,
   });
 
-  const [activeTab, setActiveTab] = useState("schedule-pickup");
-  const [activeModule, setActiveModule] = useState("Schedule Shipment");
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerwidth, setDrawerWidth] = useState(250);
-
   useEffect(() => {
     if (
       activeModule === "My Shipment" &&
       activeTab === "my-shipment" && edit === false &&
-      !location.pathname.endsWith("/ShipmentList")
+      !location.pathname.endsWith("/shipmentlist")
     ) {
-      navigate("/admin/ShipmentList", { replace: true });
+      navigate("/admin/shipmentlist", { replace: true });
     } else if (activeModule === "Schedule Shipment") {
       if (activeTab === "schedule-pickup") {
         setEdit(false);
-        navigate("/admin/Scheduleshipment", { replace: true });
+        navigate("/admin/scheduleshipment", { replace: true });
       }
     }
   }, [activeModule, activeTab, navigate]);
@@ -1265,37 +1205,6 @@ const handleprofile=()=>{
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const toggleDrawer = (open) => () => {
-    setDrawerOpen(open);
-  };
-
-  const halfopen = () => {
-    setDrawerWidth((prevWidth) => (prevWidth === 250 ? 70 : 250));
-  };
-
-  const handleModuleClick = (module) => {
-    setActiveModule(module);
-    if (module === "Schedule Shipment") {
-      navigate("/admin/Scheduleshipment", { replace: true });
-      setConfirmation(false);
-      setActiveTab("schedule-pickup");
-      setCompletedTabs({
-        "schedule-pickup": false,
-        sender: false,
-        recipient: false,
-        package: formData.shipmentType !== "Ocean",
-        payment: false,
-      });
-    } else if (module === "My Shipment") {
-      setEdit(false);
-      setActiveTab("my-shipment");
-      navigate("/admin/ShipmentList", { replace: true });
-    } else if (module === "Get Rates") {
-      navigate("/admin/GetRate", { replace: true });
-    }
-    setDrawerOpen(false);
-  };
-
   useEffect(() => {
     const fromCountryObj = countries.find((c) => c.value === formData.fromCountry);
     const toCountryObj = countries.find((c) => c.value === formData.toCountry);
@@ -1312,267 +1221,170 @@ const handleprofile=()=>{
   }, [formData.fromCountry, formData.toCountry, countries, isGetrate]);
 
   return (
-    <Root>
-      <Sidebar
-        drawerOpen={drawerOpen}
-        Loginname={loginName}
-        toggleDrawer={toggleDrawer}
-        handleMenuOpen={handleMenuOpen}
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        handleMenuClose={handleMenuClose}
-        activeModule={activeModule}
-        handleModuleClick={handleModuleClick}
-        drawerWidth={drawerwidth}
-        setDrawerWidth={setDrawerWidth}
-        account_number={accountNumber}
+    <ContentBox>
+      <Typography variant="h5" sx={{ mb: 3, fontSize: "1.3rem" }}>
+        <IconBox className="card-icon">
+          <FlightTakeoffIcon className={classes.iconBox} />
+        </IconBox>
+        Schedule Shipment
+      </Typography>
+
+      <SectionTabs
+        activeTab={activeTab}
+        setActiveTab={handleTabChange}
+        isMobile={isMobile}
+        completedTabs={completedTabs}
+        shipmentType={formData.shipmentType}
       />
 
-      <MainContent>
-        <AppBar position="static" color="default" elevation={1} sx={{ boxShadow: "none" }}>
-          <AppBarBox>
-            <DesktopToggleBtn>
-              <IconButton
-                edge="start"
-                color="primary"
-                onClick={halfopen}
-              >
-                {drawerwidth === 70 ? <ListIcon /> : <MoreVertIcon />}
-              </IconButton>
-            </DesktopToggleBtn>
+      {activeTab === "schedule-pickup" && (
+        <PickupForm
+          shipmentType={formData.shipmentType}
+          setShipmentType={(value) => setFormData(prev => ({ ...prev, shipmentType: value }))}
+          fromCountry={formData.fromCountry}
+          setFromCountry={(value) => setFormData(prev => ({ ...prev, fromCountry: value }))}
+          toCountry={formData.toCountry}
+          setToCountry={(value) => setFormData(prev => ({ ...prev, toCountry: value }))}
+          setFromCity={(value) => setFormData(prev => ({ ...prev, fromCity: value }))}
+          setRecipientCity={(value) => setFormData(prev => ({ ...prev, recipientCity: value }))}
+          pickupErrors={pickupErrors}
+          countries={countries}
+          handlePickupSubmit={handlePickupSubmit}
+          iszip={formData.iszip}
+          setisZip={(value) => setFormData(prev => ({ ...prev, iszip: value }))}
+          resiszip={formData.resiszip}
+          setresisZip={(value) => setFormData(prev => ({ ...prev, resiszip: value }))}
+          setZipCode={(value) => setFormData(prev => ({ ...prev, zipCode: value }))}
+          setRecipientZipCode={(value) => setFormData(prev => ({ ...prev, recipientZipCode: value }))}
+          setPhone1={(value) => setFormData(prev => ({ ...prev, phone1: value }))}
+          setPhone2={(value) => setFormData(prev => ({ ...prev, phone2: value }))}
+          setRecipientPhone1={(value) => setFormData(prev => ({ ...prev, recipientPhone1: value }))}
+          setRecipientPhone2={(value) => setFormData(prev => ({ ...prev, recipientPhone2: value }))}
+          isGetrate={isGetrate}
+          setActiveModule={setActiveModule}
+        />
+      )}
 
-            <MobileToggleBtn>
-              <IconButton
-                edge="start"
-                color="inherit"
-                onClick={() => setDrawerOpen(true)}
-              >
-                <MenuIcon />
-              </IconButton>
-            </MobileToggleBtn>
+      {activeTab === "sender" && (
+        <Sender
+          country={formData.country}
+          countrycode={formData.countrycode}
+          countryId={formData.countryId}
+          setCountry={(value) => setFormData(prev => ({ ...prev, country: value }))}
+          companyName={formData.companyName}
+          setCompanyName={(value) => setFormData(prev => ({ ...prev, companyName: value }))}
+          contactName={formData.contactName}
+          setContactName={(value) => setFormData(prev => ({ ...prev, contactName: value }))}
+          addressLine1={formData.addressLine1}
+          setAddressLine1={(value) => setFormData(prev => ({ ...prev, addressLine1: value }))}
+          addressLine2={formData.addressLine2}
+          setAddressLine2={(value) => setFormData(prev => ({ ...prev, addressLine2: value }))}
+          addressLine3={formData.addressLine3}
+          setAddressLine3={(value) => setFormData(prev => ({ ...prev, addressLine3: value }))}
+          zipCode={formData.zipCode}
+          setZipCode={(value) => setFormData(prev => ({ ...prev, zipCode: value }))}
+          fromCity={formData.fromCity}
+          setFromCity={(value) => setFormData(prev => ({ ...prev, fromCity: value }))}
+          state={formData.state}
+          setState={(value) => setFormData(prev => ({ ...prev, state: value }))}
+          phone1={formData.phone1}
+          setPhone1={(value) => setFormData(prev => ({ ...prev, phone1: value }))}
+          phone2={formData.phone2}
+          setPhone2={(value) => setFormData(prev => ({ ...prev, phone2: value }))}
+          email={formData.email}
+          setEmail={(value) => setFormData(prev => ({ ...prev, email: value }))}
+          needsPickup={formData.needsPickup}
+          setNeedsPickup={(value) => setFormData(prev => ({ ...prev, needsPickup: value }))}
+          pickupDate={formData.pickupDate}
+          setPickupDate={(value) => setFormData(prev => ({ ...prev, pickupDate: value }))}
+          senderErrors={senderErrors}
+          setSenderErrors={setSenderErrors}
+          handleSenderSubmit={handleSenderSubmit}
+          handlePrevious={handlePrevious}
+          setoldphone1={setoldphone1}
+          setoldphone2={setoldphone2}
+          iszip={formData.iszip}
+          setisZip={(value) => setFormData(prev => ({ ...prev, iszip: value }))}
+          isGetrate={isGetrate}
+          setActiveModule={setActiveModule}
+          Giszip={Giszip}
+        />
+      )}
 
-            <Box sx={{ flexGrow: 1 }} />
+      {activeTab === "recipient" && (
+        <Recipient
+          recipientCountry={formData.recipientCountry}
+          recipientcountrycode={formData.recipientcountrycode}
+          recipientCountryId={formData.recipientCountryId}
+          setRecipientCountry={(value) => setFormData(prev => ({ ...prev, recipientCountry: value }))}
+          recipientCompanyName={formData.recipientCompanyName}
+          setRecipientCompanyName={(value) => setFormData(prev => ({ ...prev, recipientCompanyName: value }))}
+          recipientContactName={formData.recipientContactName}
+          setRecipientContactName={(value) => setFormData(prev => ({ ...prev, recipientContactName: value }))}
+          recipientAddressLine1={formData.recipientAddressLine1}
+          setRecipientAddressLine1={(value) => setFormData(prev => ({ ...prev, recipientAddressLine1: value }))}
+          recipientAddressLine2={formData.recipientAddressLine2}
+          setRecipientAddressLine2={(value) => setFormData(prev => ({ ...prev, recipientAddressLine2: value }))}
+          recipientAddressLine3={formData.recipientAddressLine3}
+          setRecipientAddressLine3={(value) => setFormData(prev => ({ ...prev, recipientAddressLine3: value }))}
+          recipientZipCode={formData.recipientZipCode}
+          setRecipientZipCode={(value) => setFormData(prev => ({ ...prev, recipientZipCode: value }))}
+          recipientCity={formData.recipientCity}
+          setRecipientCity={(value) => setFormData(prev => ({ ...prev, recipientCity: value }))}
+          recipientState={formData.recipientState}
+          setRecipientState={(value) => setFormData(prev => ({ ...prev, recipientState: value }))}
+          recipientPhone1={formData.recipientPhone1}
+          setRecipientPhone1={(value) => setFormData(prev => ({ ...prev, recipientPhone1: value }))}
+          recipientPhone2={formData.recipientPhone2}
+          setRecipientPhone2={(value) => setFormData(prev => ({ ...prev, recipientPhone2: value }))}
+          recipientEmail={formData.recipientEmail}
+          setRecipientEmail={(value) => setFormData(prev => ({ ...prev, recipientEmail: value }))}
+          recipientLocationType={formData.recipientLocationType}
+          setRecipientLocationType={(value) => setFormData(prev => ({ ...prev, recipientLocationType: value }))}
+          recipientErrors={recipientErrors}
+          setRecipientErrors={setRecipientErrors}
+          handleRecipientSubmit={handleRecipientSubmit}
+          handleRecipientPrevious={handleRecipientPrevious}
+          setoldrecipientphone1={setoldrecipientphone1}
+          setoldrecipientphone2={setoldrecipientphone2}
+          shipmentType={formData.shipmentType}
+          resiszip={formData.resiszip}
+          setresisZip={(value) => setFormData(prev => ({ ...prev, resiszip: value }))}
+          isGetrate={isGetrate}
+          setActiveModule={setActiveModule}
+          Gresiszip={Gresiszip}
+        />
+      )}
 
-            <UsernameButton
-              startIcon={<AccountCircleIcon />}
-              onClick={handleMenuOpen}
-            >
-              {loginName}
-            </UsernameButton>
-
-            <Menu
-              anchorEl={anchorEl}
-              open={open}
-              onClose={handleMenuClose}
-              anchorOrigin={{
-                vertical: "bottom",
-                horizontal: "right",
-              }}
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-            >
-              <MenuItem onClick={handleprofile}>Profile</MenuItem>
-              <MenuItem onClick={handleLogout}>Logout</MenuItem>
-            </Menu>
-          </AppBarBox>
-        </AppBar>
-        {activeModule === "Schedule Shipment" && !confirmation && (
-          <ContentBox>
-            <Typography variant="h5" sx={{ mb: 3, fontSize: "1.3rem" }}>
-              <IconBox className="card-icon">
-                <FlightTakeoffIcon className={classes.iconBox} />
-              </IconBox>
-              Schedule Shipment
-            </Typography>
-
-            {activeModule === "Schedule Shipment" && (
-              <SectionTabs
-                activeTab={activeTab}
-                setActiveTab={handleTabChange}
-                isMobile={isMobile}
-                completedTabs={completedTabs}
-                shipmentType={formData.shipmentType}
-              />
-            )}
-
-            {activeModule === "Schedule Shipment" && activeTab === "schedule-pickup" && (
-              <PickupForm
-                shipmentType={formData.shipmentType}
-                setShipmentType={(value) => setFormData(prev => ({ ...prev, shipmentType: value }))}
-                fromCountry={formData.fromCountry}
-                setFromCountry={(value) => setFormData(prev => ({ ...prev, fromCountry: value }))}
-                toCountry={formData.toCountry}
-                setToCountry={(value) => setFormData(prev => ({ ...prev, toCountry: value }))}
-                setFromCity={(value) => setFormData(prev => ({ ...prev, fromCity: value }))}
-                setRecipientCity={(value) => setFormData(prev => ({ ...prev, recipientCity: value }))}
-                pickupErrors={pickupErrors}
-                countries={countries}
-                handlePickupSubmit={handlePickupSubmit}
-                iszip={formData.iszip}
-                setisZip={(value) => setFormData(prev => ({ ...prev, iszip: value }))}
-                resiszip={formData.resiszip}
-                setresisZip={(value) => setFormData(prev => ({ ...prev, resiszip: value }))}
-                setZipCode={(value) => setFormData(prev => ({ ...prev, zipCode: value }))}
-                setRecipientZipCode={(value) => setFormData(prev => ({ ...prev, recipientZipCode: value }))}
-                setPhone1={(value) => setFormData(prev => ({ ...prev, phone1: value }))}
-                setPhone2={(value) => setFormData(prev => ({ ...prev, phone2: value }))}
-                setRecipientPhone1={(value) => setFormData(prev => ({ ...prev, recipientPhone1: value }))}
-                setRecipientPhone2={(value) => setFormData(prev => ({ ...prev, recipientPhone2: value }))}
-                isGetrate={isGetrate}
-                setActiveModule={setActiveModule}
-              />
-            )}
-
-            {activeModule === "Schedule Shipment" && activeTab === "sender" && (
-              <Sender
-                country={formData.country}
-                countrycode={formData.countrycode}
-                countryId={formData.countryId}
-                setCountry={(value) => setFormData(prev => ({ ...prev, country: value }))}
-                companyName={formData.companyName}
-                setCompanyName={(value) => setFormData(prev => ({ ...prev, companyName: value }))}
-                contactName={formData.contactName}
-                setContactName={(value) => setFormData(prev => ({ ...prev, contactName: value }))}
-                addressLine1={formData.addressLine1}
-                setAddressLine1={(value) => setFormData(prev => ({ ...prev, addressLine1: value }))}
-                addressLine2={formData.addressLine2}
-                setAddressLine2={(value) => setFormData(prev => ({ ...prev, addressLine2: value }))}
-                addressLine3={formData.addressLine3}
-                setAddressLine3={(value) => setFormData(prev => ({ ...prev, addressLine3: value }))}
-                zipCode={formData.zipCode}
-                setZipCode={(value) => setFormData(prev => ({ ...prev, zipCode: value }))}
-                fromCity={formData.fromCity}
-                setFromCity={(value) => setFormData(prev => ({ ...prev, fromCity: value }))}
-                state={formData.state}
-                setState={(value) => setFormData(prev => ({ ...prev, state: value }))}
-                phone1={formData.phone1}
-                setPhone1={(value) => setFormData(prev => ({ ...prev, phone1: value }))}
-                phone2={formData.phone2}
-                setPhone2={(value) => setFormData(prev => ({ ...prev, phone2: value }))}
-                email={formData.email}
-                setEmail={(value) => setFormData(prev => ({ ...prev, email: value }))}
-                needsPickup={formData.needsPickup}
-                setNeedsPickup={(value) => setFormData(prev => ({ ...prev, needsPickup: value }))}
-                pickupDate={formData.pickupDate}
-                setPickupDate={(value) => setFormData(prev => ({ ...prev, pickupDate: value }))}
-                senderErrors={senderErrors}
-                setSenderErrors={setSenderErrors}
-                handleSenderSubmit={handleSenderSubmit}
-                handlePrevious={handlePrevious}
-                setoldphone1={setoldphone1}
-                setoldphone2={setoldphone2}
-                iszip={formData.iszip}
-                setisZip={(value) => setFormData(prev => ({ ...prev, iszip: value }))}
-                isGetrate={isGetrate}
-                setActiveModule={setActiveModule}
-                Giszip={Giszip}
-              />
-            )}
-            {activeModule === "Schedule Shipment" && activeTab === "recipient" && (
-              <Recipient
-                recipientCountry={formData.recipientCountry}
-                recipientcountrycode={formData.recipientcountrycode}
-                recipientCountryId={formData.recipientCountryId}
-                setRecipientCountry={(value) => setFormData(prev => ({ ...prev, recipientCountry: value }))}
-                recipientCompanyName={formData.recipientCompanyName}
-                setRecipientCompanyName={(value) => setFormData(prev => ({ ...prev, recipientCompanyName: value }))}
-                recipientContactName={formData.recipientContactName}
-                setRecipientContactName={(value) => setFormData(prev => ({ ...prev, recipientContactName: value }))}
-                recipientAddressLine1={formData.recipientAddressLine1}
-                setRecipientAddressLine1={(value) => setFormData(prev => ({ ...prev, recipientAddressLine1: value }))}
-                recipientAddressLine2={formData.recipientAddressLine2}
-                setRecipientAddressLine2={(value) => setFormData(prev => ({ ...prev, recipientAddressLine2: value }))}
-                recipientAddressLine3={formData.recipientAddressLine3}
-                setRecipientAddressLine3={(value) => setFormData(prev => ({ ...prev, recipientAddressLine3: value }))}
-                recipientZipCode={formData.recipientZipCode}
-                setRecipientZipCode={(value) => setFormData(prev => ({ ...prev, recipientZipCode: value }))}
-                recipientCity={formData.recipientCity}
-                setRecipientCity={(value) => setFormData(prev => ({ ...prev, recipientCity: value }))}
-                recipientState={formData.recipientState}
-                setRecipientState={(value) => setFormData(prev => ({ ...prev, recipientState: value }))}
-                recipientPhone1={formData.recipientPhone1}
-                setRecipientPhone1={(value) => setFormData(prev => ({ ...prev, recipientPhone1: value }))}
-                recipientPhone2={formData.recipientPhone2}
-                setRecipientPhone2={(value) => setFormData(prev => ({ ...prev, recipientPhone2: value }))}
-                recipientEmail={formData.recipientEmail}
-                setRecipientEmail={(value) => setFormData(prev => ({ ...prev, recipientEmail: value }))}
-                recipientLocationType={formData.recipientLocationType}
-                setRecipientLocationType={(value) => setFormData(prev => ({ ...prev, recipientLocationType: value }))}
-                recipientErrors={recipientErrors}
-                setRecipientErrors={setRecipientErrors}
-                handleRecipientSubmit={handleRecipientSubmit}
-                handleRecipientPrevious={handleRecipientPrevious}
-                setoldrecipientphone1={setoldrecipientphone1}
-                setoldrecipientphone2={setoldrecipientphone2}
-                shipmentType={formData.shipmentType}
-                resiszip={formData.resiszip}
-                setresisZip={(value) => setFormData(prev => ({ ...prev, resiszip: value }))}
-                isGetrate={isGetrate}
-                setActiveModule={setActiveModule}
-                Gresiszip={Gresiszip}
-              />
-            )}
-            {activeModule === "Schedule Shipment" && activeTab === "package" && formData.shipmentType !== "Ocean" && (
-              <Package
-                packageData={packageData}
-                setPackageData={setPackageData}
-                handlePackageChange={handlePackageChange}
-                handleAddPackage={handleAddPackage}
-                handleRemovePackage={handleRemovePackage}
-                handlePackageSubmit={handlePackageSubmit}
-                commercialInvoiceData={commercialInvoiceData}
-                setCommercialInvoiceData={setCommercialInvoiceData}
-                handleInvoiceChange={handleInvoiceChange}
-                handleAddInvoiceRow={handleAddInvoiceRow}
-                handleRemoveInvoiceRow={handleRemoveInvoiceRow}
-                calculateTotalValue={calculateTotalValue}
-                handlepackagePrevious={handlepackagePrevious}
-                packageErrors={packageErrors}
-                packageType={packageType}
-                setPackageType={setPackageType}
-                noOfPackages={noOfPackages}
-                setNoOfPackages={setNoOfPackages}
-                dutiesPaidBy={dutiesPaidBy}
-                setDutiesPaidBy={setDutiesPaidBy}
-                updatePackageRows={updatePackageRows}
-                samecountry={samecountry}
-                isGetrate={isGetrate}
-                setActiveModule={setActiveModule}
-              />
-            )}
-          </ContentBox>
-        )}
-
-        <Routes>
-          <Route path="ShipmentList" element={<Myshipment edit={edit} setEdit={setEdit} />} />
-          <Route path="MyShipmentNew" element={<Myshipmentnew setEdit={setEdit} />} />
-          <Route path="ScheduleConfirmation" element={<ScheduleConfirmation />} />
-          {activeModule === "Get Rates" &&
-            <Route path="getrate" element={<GetRate setActiveModule={setActiveModule} setActiveTab={setActiveTab} />} />}
-{/*             <Route path="profile" element={<ProfilePage/>}/> */}
-        </Routes>
-        {activeModule !== "My Shipment" && (
-          <Box className="footer-box" sx={{
-            justifySelf: isMobile ? "center" : "flex-end",
-            marginRight: 3,
-            marginTop: 1,
-            marginBottom: 1,
-          }}>
-            <Typography align="center" className={classes.footerTypography} sx={{ fontSize: isMobile ? "12px" : "12px" }}>
-              All Rights Reserved. Site Powered by{" "}
-              <span
-                className={`${classes.sflLink} sfl-link`}
-                onClick={() => window.open("https://sflworldwide.com/", "_blank")}
-              >
-                SFL Worldwide
-              </span>
-            </Typography>
-          </Box>
-        )}
-      </MainContent>
-    </Root>
+      {activeTab === "package" && formData.shipmentType !== "Ocean" && (
+        <Package
+          packageData={packageData}
+          setPackageData={setPackageData}
+          handlePackageChange={handlePackageChange}
+          handleAddPackage={handleAddPackage}
+          handleRemovePackage={handleRemovePackage}
+          handlePackageSubmit={handlePackageSubmit}
+          commercialInvoiceData={commercialInvoiceData}
+          setCommercialInvoiceData={setCommercialInvoiceData}
+          handleInvoiceChange={handleInvoiceChange}
+          handleAddInvoiceRow={handleAddInvoiceRow}
+          handleRemoveInvoiceRow={handleRemoveInvoiceRow}
+          calculateTotalValue={calculateTotalValue}
+          handlepackagePrevious={handlepackagePrevious}
+          packageErrors={packageErrors}
+          packageType={packageType}
+          setPackageType={setPackageType}
+          noOfPackages={noOfPackages}
+          setNoOfPackages={setNoOfPackages}
+          dutiesPaidBy={dutiesPaidBy}
+          setDutiesPaidBy={setDutiesPaidBy}
+          updatePackageRows={updatePackageRows}
+          samecountry={samecountry}
+          isGetrate={isGetrate}
+          setActiveModule={setActiveModule}
+        />
+      )}
+    </ContentBox>
   );
 };
 

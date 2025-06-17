@@ -47,7 +47,7 @@ const STATUSES = [
   "To Be Deleted",
 ];
 
-const ShipmentDashboard = ({ setEdit }) => {
+const ShipmentDashboard = () => {
   const classes = useStyles();
   const navigate = useNavigate();
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -206,7 +206,6 @@ const ShipmentDashboard = ({ setEdit }) => {
       });
 
       if (response.status === 200 && response.data?.user) {
-        setEdit(true);
         navigate("/admin/MyShipmentNew", {
           state: { shipment: response.data.user },
           replace: true,
@@ -565,7 +564,7 @@ const ShipmentDashboard = ({ setEdit }) => {
           </Button>
         </Box>
       </div>
-      <Box className="footer-box">
+      {/* <Box className="footer-box">
         <Typography
           className={classes.footerTypography}
           sx={{ mt: 2, fontSize: "0.75rem", textAlign: { xs: "center", sm: "right" } }}
@@ -579,7 +578,7 @@ const ShipmentDashboard = ({ setEdit }) => {
             SFL Worldwide
           </span>
         </Typography>
-      </Box>
+      </Box> */}
     </div>
   );
 };

@@ -5,13 +5,14 @@ import EmailVerification from "./views/pages/EmailVerification";
 import { Toaster } from "react-hot-toast";
 import LoginPage from "./views/pages/LoginPage";
 import ForgotPassword from "./views/pages/ForgetPage";
-import ScheduleShipment from "./views/pages/scheduleshipment/Scheduleshipment";
+// import ScheduleShipment from "./views/pages/scheduleshipment/Scheduleshipment";
 import ResetPassword from "./views/pages/ResetPassword";
 import { ShipmentProvider } from "./views/ShipmentContext";
 import "./App.css";
 import "./index.css";
 import Invoice from "./views/pages/ShipmentDocumentation/Invoice";
 import PrintCommercialInvoice from "./views/pages/ShipmentDocumentation/PrintCommercialInvoice";
+import Dashboard from "./views/pages/Dashboard";
 
 // ProtectedRoute component
 const ProtectedRoute = ({ children }) => {
@@ -49,31 +50,31 @@ const InactivityHandler = ({ children }) => {
 };
 
 function App() {
-  useEffect(() => {
-    const handleContextMenu = (e) => {
-      e.preventDefault();
-    };
+  // useEffect(() => {
+  //   const handleContextMenu = (e) => {
+  //     e.preventDefault();
+  //   };
 
-    const handleKeyDown = (e) => {
-      if (
-        e.key === "F12" ||
-        (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) ||
-        (e.ctrlKey && e.key === "U")
-      ) {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      }
-    };
+  //   const handleKeyDown = (e) => {
+  //     if (
+  //       e.key === "F12" ||
+  //       (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) ||
+  //       (e.ctrlKey && e.key === "U")
+  //     ) {
+  //       e.preventDefault();
+  //       e.stopPropagation();
+  //       return false;
+  //     }
+  //   };
 
-    document.addEventListener("contextmenu", handleContextMenu);
-    document.addEventListener("keydown", handleKeyDown);
+  //   document.addEventListener("contextmenu", handleContextMenu);
+  //   document.addEventListener("keydown", handleKeyDown);
 
-    return () => {
-      document.removeEventListener("contextmenu", handleContextMenu);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
+  //   return () => {
+  //     document.removeEventListener("contextmenu", handleContextMenu);
+  //     document.removeEventListener("keydown", handleKeyDown);
+  //   };
+  // }, []);
 
   return (
     <Router>
@@ -96,7 +97,7 @@ function App() {
             
               <ProtectedRoute>
                 <ShipmentProvider>
-                <ScheduleShipment />
+                <Dashboard />
                 </ShipmentProvider>
               </ProtectedRoute>
             }
