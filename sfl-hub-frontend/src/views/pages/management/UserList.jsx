@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios"; // Import axios
 import {
   Box,
   Button,
@@ -14,15 +16,19 @@ import {
   TableHead,
   TableRow,
   TextField,
-  Typography
+  Typography,
 } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import EditIcon from '@mui/icons-material/Edit';
+
+import { api } from "../../../utils/api";
 
 const UserList = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     userName: "",
@@ -34,8 +40,31 @@ const UserList = () => {
     status: ""
   });
 
+  const [searchFilters, setSearchFilters] = useState({
+    name: "",
+    userName: "",
+    userType: "",
+    email: "",
+    createdOn: "",
+    accountNumber: "",
+    managedBy: "",
+    status: ""
+  });
+
+  const [userData, setUserData] = useState([
+    { name: "Lokesh Agarwal", loginid: "lokeshwebment", usertype: "Employee", email: "lokesh@webment.com", createdon: "2025-06-01T10:00:00Z", accountnumber: "125655", managedbyname: "Admin", status: "Enable" },
+    { name: "Anshul Sharma", loginid: "anshul123", usertype: "Contractor", email: "anshul@example.com", createdon: "2025-06-05T12:00:00Z", accountnumber: "125656", managedbyname: "Manager", status: "Disable" },
+    { name: "Priya Singh", loginid: "priya789", usertype: "Customer", email: "priya@demo.com", createdon: "2025-06-10T09:00:00Z", accountnumber: "125657", managedbyname: "Supervisor", status: "Enable" },
+    { name: "Ravi Kumar", loginid: "ravi456", usertype: "Employee", email: "ravi@company.com", createdon: "2025-06-15T14:00:00Z", accountnumber: "125658", managedbyname: "Admin", status: "Enable" },
+  ]);
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (field) => (event) => {
     setFormData((prev) => ({ ...prev, [field]: event.target.value }));
+  };
+
+  const handleSearchChange = (field) => (event) => {
+    setSearchFilters((prev) => ({ ...prev, [field]: event.target.value }));
   };
 
   const handleReset = () => {
@@ -49,62 +78,130 @@ const UserList = () => {
       managedBy: "",
       status: ""
     });
+    setSearchFilters({
+      name: "",
+      userName: "",
+      userType: "",
+      email: "",
+      createdOn: "",
+      accountNumber: "",
+      managedBy: "",
+      status: ""
+    });
+    setUserData([]);
   };
 
+  const fetchUserList = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.post(`${api.BackendURL}/users/getUserList`, {
+        userDetails: {
+          Name: formData.name,
+          UserName: formData.userName,
+          UserType: formData.userType,
+          Email: formData.email,
+          AccountNumber: formData.accountNumber,
+          ManagedBy: formData.managedBy,
+          Status: formData.status
+        }
+      }, {
+        headers: {
+          "Content-Type": "application/json",
+        }
+      });
+      if (response.data.resResult) {
+        setUserData(response.data.resResult);
+      } else {
+        setUserData([]);
+      }
+    } catch (error) {
+      console.error("Error fetching user list:", error);
+      setUserData([]);
+    }
+    setLoading(false);
+  };
+
+  // Filter data based on search inputs with improved handling
+  const filteredData = userData.filter((row) => {
+  return Object.keys(searchFilters).every((key) => {
+    const searchValue = searchFilters[key] || "";
+    let rowValue = row[key] || "";
+
+    if (key === "name") rowValue = row.name || "";
+    if (key === "userName") rowValue = row.loginid || "";
+    if (key === "userType") rowValue = row.usertype || "";
+    if (key === "email") rowValue = row.email || "";
+    if (key === "createdOn") rowValue = row.createdon ? new Date(row.createdon).toLocaleDateString() : "";
+    if (key === "accountNumber") rowValue = row.accountnumber || "";
+    if (key === "managedBy") rowValue = row.managedbyname || "";
+    if (key === "status") rowValue = row.status || "";
+    if (key === "personid") rowValue = row.personid || "";
+    if (key === "phonenum") rowValue = row.phonenum || "";
+    if (key === "addressline1") rowValue = row.addressline1 || "";
+    if (key === "addressline2") rowValue = row.addressline2 || "";
+    if (key === "addressline3") rowValue = row.addressline3 || "";
+    if (key === "city") rowValue = row.city || "";
+    if (key === "companyname") rowValue = row.companyname || "";
+    if (key === "state") rowValue = row.state || "";
+    if (key === "zipcode") rowValue = row.zipcode || "";
+
+    rowValue = rowValue.toString().toLowerCase();
+    return searchValue === "" || rowValue.includes(searchValue.toLowerCase());
+  });
+});
+
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: { xs: 1, sm: 3 } }}>
       <Card elevation={2}>
         <CardContent>
           {/* Header */}
-       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-  <Box display="flex" alignItems="center" gap={1.5}>
-    <Box
-      sx={{
-        marginBottom:6,
-        position: "absolute",
-        width: 40,
-        height: 40,
-        backgroundColor: "#8e24aa",
-       
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        color: "#fff",
-        boxShadow: 3,
-         zIndex: 1,
-         padding:"30px"
-      }}
-    >
-      <PeopleIcon sx={{ fontSize: 26 }} />
-      
-    </Box>
-    <Typography
-      variant="h6"
-      sx={{
-        fontWeight: "bold",
-        fontSize: "16px",
-        display: "flex",
-        alignItems: "center",
-        marginLeft:9,
-        position: "absolute",
-        marginBottom:4,
-      }}
-    >
-      User List
-    </Typography>
-  </Box>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Box display="flex" alignItems="center" gap={1.5}>
+              <Box
+                sx={{
+                  marginBottom: 6,
+                  position: "absolute",
+                  width: 40,
+                  height: 40,
+                  backgroundColor: "#8e24aa",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#fff",
+                  boxShadow: 3,
+                  zIndex: 1,
+                  padding: "30px"
+                }}
+              >
+                <PeopleIcon sx={{ fontSize: 20 }} />
+              </Box>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: "bold",
+                  fontSize: { xs: "12px", sm: "14px" },
+                  display: "flex",
+                  alignItems: "center",
+                  marginLeft: { xs: 6, sm: 9 },
+                  position: "absolute",
+                  marginBottom: 4,
+                }}
+              >
+                User List
+              </Typography>
+            </Box>
+            <Button
+              variant="contained"
+              sx={{ backgroundColor: "#8e24aa", fontSize: { xs: "8px", sm: "10px" }, padding: "10px 15px", fontWeight: 550 }}
+              onClick={() => navigate('/admin/AddUser')}
+            >
+              Add User
+            </Button>
+          </Box>
 
-  <Button
-    variant="contained"
-    sx={{ backgroundColor: "#8e24aa", fontSize: "12px",padding:"10px 16px",fontWeight:550  }}
-    // startIcon={<AddIcon />}
-  >
-    Add User
-  </Button>
-</Box>
           {/* Filters / Input Fields */}
-          <Grid container spacing={2} mb={2}>
-            <Grid item xs={12} sm={6} md={4}>
+          <Grid container spacing={1} mb={2} sx={{ flexDirection: { xs: "column", sm: "row" } }}>
+            <Grid item xs={12} sm={6} md={4} mb={2}>
               <TextField
                 label="Name"
                 value={formData.name}
@@ -112,11 +209,11 @@ const UserList = () => {
                 fullWidth
                 variant="outlined"
                 size="small"
-                InputProps={{ sx: { fontSize: "13px" } }}
-                InputLabelProps={{ sx: { fontSize: "13px" } }}
+                InputProps={{ sx: { fontSize: "11px" } }}
+                InputLabelProps={{ sx: { fontSize: "11px" } }}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={6} md={4} mb={2}>
               <TextField
                 label="User Name"
                 value={formData.userName}
@@ -124,11 +221,11 @@ const UserList = () => {
                 fullWidth
                 variant="outlined"
                 size="small"
-                InputProps={{ sx: { fontSize: "13px" } }}
-                InputLabelProps={{ sx: { fontSize: "13px" } }}
+                InputProps={{ sx: { fontSize: "11px" } }}
+                InputLabelProps={{ sx: { fontSize: "11px" } }}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={6} md={4} mb={2}>
               <Select
                 fullWidth
                 variant="outlined"
@@ -136,16 +233,15 @@ const UserList = () => {
                 onChange={handleChange("userType")}
                 displayEmpty
                 size="small"
-                sx={{ fontSize: "13px" }}
+                sx={{ fontSize: "11px" }}
               >
-                <MenuItem value="" sx={{ fontSize: "13px" }}>User Type</MenuItem>
-                <MenuItem value="admin" sx={{ fontSize: "13px" }}>Customer</MenuItem>
-                <MenuItem value="staff" sx={{ fontSize: "13px" }}>Employee</MenuItem>
-                <MenuItem value="customer" sx={{ fontSize: "13px" }}>Contractor</MenuItem>
+                <MenuItem value="" sx={{ fontSize: "11px" }}>User Type</MenuItem>
+                <MenuItem value="admin" sx={{ fontSize: "11px" }}>Customer</MenuItem>
+                <MenuItem value="staff" sx={{ fontSize: "11px" }}>Employee</MenuItem>
+                <MenuItem value="customer" sx={{ fontSize: "11px" }}>Contractor</MenuItem>
               </Select>
             </Grid>
-
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={6} md={4} mb={2}>
               <TextField
                 label="Email"
                 value={formData.email}
@@ -153,11 +249,11 @@ const UserList = () => {
                 fullWidth
                 variant="outlined"
                 size="small"
-                InputProps={{ sx: { fontSize: "13px" } }}
-                InputLabelProps={{ sx: { fontSize: "13px" } }}
+                InputProps={{ sx: { fontSize: "11px" } }}
+                InputLabelProps={{ sx: { fontSize: "11px" } }}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={6} md={4} mb={2}>
               <TextField
                 label="Created On"
                 type="date"
@@ -166,11 +262,11 @@ const UserList = () => {
                 fullWidth
                 variant="outlined"
                 size="small"
-                InputLabelProps={{ shrink: true, sx: { fontSize: "13px" } }}
-                InputProps={{ sx: { fontSize: "13px" } }}
+                InputLabelProps={{ shrink: true, sx: { fontSize: "11px" } }}
+                InputProps={{ sx: { fontSize: "11px" } }}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={6} md={4} mb={2}>
               <TextField
                 label="Account Number"
                 value={formData.accountNumber}
@@ -178,12 +274,11 @@ const UserList = () => {
                 fullWidth
                 variant="outlined"
                 size="small"
-                InputProps={{ sx: { fontSize: "13px" } }}
-                InputLabelProps={{ sx: { fontSize: "13px" } }}
+                InputProps={{ sx: { fontSize: "11px" } }}
+                InputLabelProps={{ sx: { fontSize: "11px" } }}
               />
             </Grid>
-
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={6} md={4} mb={2}>
               <Select
                 fullWidth
                 variant="outlined"
@@ -191,13 +286,13 @@ const UserList = () => {
                 onChange={handleChange("managedBy")}
                 displayEmpty
                 size="small"
-                sx={{ fontSize: "13px" }}
+                sx={{ fontSize: "11px" }}
               >
-                <MenuItem value="" sx={{ fontSize: "13px" }}>Managed By</MenuItem>
-                <MenuItem value="manager1" sx={{ fontSize: "13px" }}>No Option</MenuItem>
+                <MenuItem value="" sx={{ fontSize: "11px" }}>Managed By</MenuItem>
+                <MenuItem value="manager1" sx={{ fontSize: "11px" }}>No Option</MenuItem>
               </Select>
             </Grid>
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={6} md={4} mb={2}>
               <Select
                 fullWidth
                 variant="outlined"
@@ -205,11 +300,11 @@ const UserList = () => {
                 onChange={handleChange("status")}
                 displayEmpty
                 size="small"
-                sx={{ fontSize: "13px" }}
+                sx={{ fontSize: "11px" }}
               >
-                <MenuItem value="" sx={{ fontSize: "13px" }}>Status</MenuItem>
-                <MenuItem value="Enable" sx={{ fontSize: "13px" }}>Enable</MenuItem>
-                <MenuItem value="Disable" sx={{ fontSize: "13px" }}>Disable</MenuItem>
+                <MenuItem value="" sx={{ fontSize: "11px" }}>Status</MenuItem>
+                <MenuItem value="Enable" sx={{ fontSize: "11px" }}>Enable</MenuItem>
+                <MenuItem value="Disable" sx={{ fontSize: "11px" }}>Disable</MenuItem>
               </Select>
             </Grid>
           </Grid>
@@ -219,20 +314,21 @@ const UserList = () => {
             <Button
               variant="contained"
               color="error"
-              sx={{ fontSize: "12px",padding:"10px",fontWeight:550}}
+              sx={{ fontSize: { xs: "8px", sm: "10px" }, padding: "6px", fontWeight: 550 }}
             >
               {<FileDownloadIcon />}
             </Button>
             <Button
               variant="contained"
-              sx={{ backgroundColor: "#ec407a", fontSize: "12px",padding:"10px 16px",fontWeight:550 }}
+              sx={{ backgroundColor: "#ec407a", fontSize: { xs: "8px", sm: "10px" }, padding: "10px 15px", fontWeight: 550 }}
               startIcon={<SearchIcon />}
+              onClick={fetchUserList}
             >
               Search
             </Button>
             <Button
               variant="contained"
-              sx={{ backgroundColor: "#9e9e9e", fontSize: "12px",padding:"10px 16px",fontWeight:550  }}
+              sx={{ backgroundColor: "#9e9e9e", fontSize: { xs: "8px", sm: "10px" }, padding: "10px 15px", fontWeight: 550 }}
               startIcon={<RestartAltIcon />}
               onClick={handleReset}
             >
@@ -256,18 +352,70 @@ const UserList = () => {
                     "Status",
                     "Actions"
                   ].map((header, i) => (
-                    <TableCell key={i} sx={{ fontWeight: "bold", fontSize: "13px" }}>
+                    <TableCell
+                      key={i}
+                      sx={{
+                        fontWeight: "bold",
+                        fontSize: "11px",
+                        whiteSpace: "normal",
+                        wordWrap: "break-word",
+                        verticalAlign: "top",
+                        paddingBottom: 0,
+                      }}
+                    >
                       {header}
+                      {header !== "Actions" && (
+                        <TextField
+                          value={searchFilters[header.toLowerCase().replace(" ", "")]}
+                          onChange={handleSearchChange(header.toLowerCase().replace(" ", ""))}
+                          size="small"
+                          sx={{ mt: 1, width: "100%", fontSize: "10px" }}
+                          InputProps={{
+                            sx: {
+                              fontSize: "10px",
+                              borderBottom: "1px solid rgba(0,0,0,0.23)",
+                              padding: 0,
+                            }
+                          }}
+                          variant="standard"
+                        />
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
               </TableHead>
               <TableBody>
-                <TableRow>
-                  <TableCell colSpan={9} align="center" sx={{ fontSize: "13px" }}>
-                    No rows found
-                  </TableCell>
-                </TableRow>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={9} align="center" sx={{ fontSize: "10px" }}>
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredData.length > 0 ? (
+                  filteredData.map((row, index) => (
+                    <TableRow key={index}>
+                      <TableCell sx={{ fontSize: "11px", whiteSpace: "normal", wordWrap: "break-word" }}>{row.name}</TableCell>
+                      <TableCell sx={{ fontSize: "11px", whiteSpace: "normal", wordWrap: "break-word" }}>{row.loginid}</TableCell>
+                      <TableCell sx={{ fontSize: "11px", whiteSpace: "normal", wordWrap: "break-word" }}>{row.usertype}</TableCell>
+                      <TableCell sx={{ fontSize: "11px", whiteSpace: "normal", wordWrap: "break-word" }}>{row.email}</TableCell>
+                      <TableCell sx={{ fontSize: "11px", whiteSpace: "normal", wordWrap: "break-word" }}>
+                        {row.createdon ? new Date(row.createdon).toLocaleDateString() : ""}
+                      </TableCell>
+                      <TableCell sx={{ fontSize: "11px", whiteSpace: "normal", wordWrap: "break-word" }}>{row.accountnumber || ""}</TableCell>
+                      <TableCell sx={{ fontSize: "11px", whiteSpace: "normal", wordWrap: "break-word" }}>{row.managedbyname || ""}</TableCell>
+                      <TableCell sx={{ fontSize: "11px", whiteSpace: "normal", wordWrap: "break-word" }}>{row.status}</TableCell>
+                      <TableCell sx={{ fontSize: "11px", whiteSpace: "normal", wordWrap: "break-word" }}>
+                        <EditIcon sx={{ fontSize: "19px", cursor: "pointer", border: "1px solid blue" }} color="primary" onClick={() => navigate('/admin/EditUser', { state: { user: row } })} />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={9} align="center" sx={{ fontSize: "10px" }}>
+                      No rows found
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </TableContainer>
@@ -279,24 +427,25 @@ const UserList = () => {
             justifyContent="space-between"
             alignItems="center"
             flexWrap="wrap"
+            sx={{ flexDirection: { xs: "column", sm: "row" }, gap: { xs: 1, sm: 0 } }}
           >
-            <Button variant="outlined" disabled sx={{ fontSize: "12px" }}>
+            <Button variant="outlined" disabled sx={{ fontSize: "10px" }}>
               Previous
             </Button>
-            <Typography sx={{ fontSize: "13px" }}>
-              Total rows : 0 &nbsp;&nbsp; 1 of 1
+            <Typography sx={{ fontSize: "10px" }}>
+              Total rows : {filteredData.length}    1 of 1
             </Typography>
             <Select
-              variant="outlined"
+              variant="standard"
               defaultValue={10}
               size="small"
-              sx={{ minWidth: 120, fontSize: "13px" }}
+              sx={{ minWidth: 120, fontSize: "10px", "& .MuiSelect-select": { borderBottom: "1px solid rgba(0,0,0,0.23)" } }}
             >
-              <MenuItem value={10} sx={{ fontSize: "13px" }}>10 rows</MenuItem>
-              <MenuItem value={25} sx={{ fontSize: "13px" }}>25 rows</MenuItem>
-              <MenuItem value={50} sx={{ fontSize: "13px" }}>50 rows</MenuItem>
+              <MenuItem value={10} sx={{ fontSize: "10px" }}>10 rows</MenuItem>
+              <MenuItem value={25} sx={{ fontSize: "10px" }}>25 rows</MenuItem>
+              <MenuItem value={50} sx={{ fontSize: "10px" }}>50 rows</MenuItem>
             </Select>
-            <Button variant="outlined" disabled sx={{ fontSize: "12px" }}>
+            <Button variant="outlined" disabled sx={{ fontSize: "10px" }}>
               Next
             </Button>
           </Box>

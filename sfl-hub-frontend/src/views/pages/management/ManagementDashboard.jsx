@@ -57,7 +57,7 @@ const ManagementDashboard = () => {
             'Invoices services': '/admin/invoices'
         };
         if (routes[section]) {
-            navigate(routes[section], { replace: true });
+            navigate(routes[section]);
         }
     };
 

@@ -33,7 +33,7 @@ const Schedule = ({ setActiveModule, activeModule, activeTab, setActiveTab }) =>
   const { data: countries = [], isLoading: isCountriesLoading, isError: isCountriesError } = useQuery({
     queryKey: ['countries'],
     queryFn: async () => {
-      const res = await axios.get(`${api.BackendURL}/locations/getCountry`,{withCredentials:true});
+      const res = await axios.get(`${api.BackendURL}/locations/getCountry`,{withCredentials:true}); 
       const countryData = res.data?.user?.[0] || [];
       return countryData.map(country => ({
         value: country.countrycode.toLowerCase(),
@@ -225,6 +225,37 @@ const Schedule = ({ setActiveModule, activeModule, activeTab, setActiveTab }) =>
   packageDetails,
   countries,
 ]);
+const GetrateResetData = () => {
+    updateFromDetails({
+      fromCountry: 'us',
+      fromZipCode: '',
+      fromCity: '',
+      fromState: '',
+    });
+
+    updateToDetails({
+      toCountry: 'us',
+      toZipCode: '',
+      toCity: '',
+      toState: '',
+      shipDate: new Date().toISOString().split('T')[0],
+      residential: 'No',
+      packageType: 'Package',
+    });
+
+    setPackageDetails([
+      {
+        packageNumber: '',
+        weight: '',
+        length: '',
+        width: '',
+        height: '',
+        chargeableWeight: '',
+        insuredValue: '',
+      },
+    ]);
+    GsetisZip(0),GsetresisZip(0),GsetShipmentType("AIR");
+  };
 
   const resetForm = () => {
     setFormData({
@@ -671,6 +702,7 @@ const Schedule = ({ setActiveModule, activeModule, activeTab, setActiveTab }) =>
           },
         });
         resetForm();
+        GetrateResetData();
         setIsgetrate(false);
       } else {
         toast.dismiss(toastId);

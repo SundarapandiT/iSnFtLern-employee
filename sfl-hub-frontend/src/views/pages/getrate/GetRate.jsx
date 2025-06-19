@@ -1187,7 +1187,7 @@ const GetRate = ({ setActiveModule, setActiveTab }) => {
         </div>
 
         <Tabs
-          value={GshipmentType === 'AIR' || GshipmentType === 'GROUND' ? 'AIR' : 'OCEAN'}
+          value={GshipmentType === 'AIR' || GshipmentType === 'GROUND' ? 'AIR' : 'AIR'}
           indicatorColor="transparent"
           variant="fullWidth"
           onChange={(e, newValue) => GsetShipmentType(newValue)}
