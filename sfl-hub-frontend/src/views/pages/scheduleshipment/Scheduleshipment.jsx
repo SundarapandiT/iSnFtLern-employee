@@ -24,7 +24,7 @@ import Recipient from "./Recipient";
 import Package from "./Package";
 
 const Schedule = ({ setActiveModule, activeModule, activeTab, setActiveTab }) => {
-  const { fromDetails, toDetails, packageDetails, Giszip, Gresiszip, GshipmentType, isGetrate, setIsgetrate } = useShipmentContext();
+ const { fromDetails, toDetails, packageDetails, Giszip, Gresiszip, GshipmentType, isGetrate,setIsgetrate,updateFromDetails,updateToDetails,setPackageDetails,GsetisZip,GsetresisZip,GsetShipmentType } = useShipmentContext();
   const navigate = useNavigate();
   const [edit, setEdit] = useState(false);
   const [confirmation, setConfirmation] = useState(false);
@@ -33,7 +33,7 @@ const Schedule = ({ setActiveModule, activeModule, activeTab, setActiveTab }) =>
   const { data: countries = [], isLoading: isCountriesLoading, isError: isCountriesError } = useQuery({
     queryKey: ['countries'],
     queryFn: async () => {
-      const res = await axios.get(`${api.BackendURL}/locations/getCountry`);
+      const res = await axios.get(`${api.BackendURL}/locations/getCountry`,{withCredentials:true});
       const countryData = res.data?.user?.[0] || [];
       return countryData.map(country => ({
         value: country.countrycode.toLowerCase(),
@@ -164,23 +164,25 @@ const Schedule = ({ setActiveModule, activeModule, activeTab, setActiveTab }) =>
     }
   }, []);
 
-  useEffect(() => {
+ useEffect(() => {
+  if (isGetrate && fromDetails && toDetails) {
     setFormData(prev => ({
       ...prev,
-      fromCountry: isGetrate && fromDetails.fromCountry,
-      toCountry: isGetrate && toDetails.toCountry,
-      shipmentType: isGetrate && GshipmentType,
+      fromCountry: fromDetails.fromCountry,
+      toCountry: toDetails.toCountry,
+      shipmentType: GshipmentType,
       iszip: Giszip || 1,
       resiszip: Gresiszip || 1,
       zipCode: fromDetails.fromZipCode,
       fromCity: fromDetails.fromCity,
       state: fromDetails.fromState,
-      recipientCountry: countries.find((c) => c.value === toDetails.toCountry)?.label || "",
+      recipientCountry: countries.find(c => c.value === toDetails.toCountry)?.label || "",
       recipientZipCode: toDetails.toZipCode,
       recipientCity: toDetails.toCity,
       recipientState: toDetails.toState,
       pickupDate: toDetails.shipDate || new Date().toISOString().split('T')[0],
     }));
+
     setPackageType(toDetails.packageType || 'Package');
     setNoOfPackages(packageDetails.length || 1);
     setPackageData(
@@ -194,19 +196,35 @@ const Schedule = ({ setActiveModule, activeModule, activeTab, setActiveTab }) =>
             chargable_weight: pkg.chargeableWeight || 0,
             insured_value: pkg.insuredValue || 0,
           }))
-        : [
-            {
-              noOfPackages: 1,
-              weight: 0,
-              length: 0,
-              width: 0,
-              height: 0,
-              chargable_weight: 0,
-              insured_value: 0,
-            },
-          ]
+        : [{
+            noOfPackages: 1,
+            weight: 0,
+            length: 0,
+            width: 0,
+            height: 0,
+            chargable_weight: 0,
+            insured_value: 0,
+          }]
     );
-  }, [GshipmentType, Giszip, Gresiszip, fromDetails, toDetails, packageDetails, countries, isGetrate]);
+  }
+}, [
+  isGetrate,
+  GshipmentType,
+  Giszip,
+  Gresiszip,
+  fromDetails?.fromCountry,
+  fromDetails?.fromZipCode,
+  fromDetails?.fromCity,
+  fromDetails?.fromState,
+  toDetails?.toCountry,
+  toDetails?.toZipCode,
+  toDetails?.toCity,
+  toDetails?.toState,
+  toDetails?.shipDate,
+  toDetails?.packageType,
+  packageDetails,
+  countries,
+]);
 
   const resetForm = () => {
     setFormData({
@@ -677,20 +695,20 @@ const Schedule = ({ setActiveModule, activeModule, activeTab, setActiveTab }) =>
     payment: false,
   });
 
-  useEffect(() => {
-    if (
-      activeModule === "My Shipment" &&
-      activeTab === "my-shipment" && edit === false &&
-      !location.pathname.endsWith("/shipmentlist")
-    ) {
-      navigate("/admin/shipmentlist", { replace: true });
-    } else if (activeModule === "Schedule Shipment") {
-      if (activeTab === "schedule-pickup") {
-        setEdit(false);
-        navigate("/admin/scheduleshipment", { replace: true });
-      }
-    }
-  }, [activeModule, activeTab, navigate]);
+  // useEffect(() => {
+  //   if (
+  //     activeModule === "My Shipment" &&
+  //     activeTab === "my-shipment" && edit === false &&
+  //     !location.pathname.endsWith("/ShipmentList")
+  //   ) {
+  //     navigate("/admin/shipmentlist", { replace: true });
+  //   } else if (activeModule === "Schedule Shipment") {
+  //     if (activeTab === "schedule-pickup") {
+  //       setEdit(false);
+  //       navigate("/admin/Scheduleshipment", { replace: true });
+  //     }
+  //   }
+  // }, [activeModule, activeTab, navigate]);
 
   const updatePackageRows = (num) => {
     const newNum = Number(num);
@@ -1205,20 +1223,36 @@ const Schedule = ({ setActiveModule, activeModule, activeTab, setActiveTab }) =>
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  useEffect(() => {
-    const fromCountryObj = countries.find((c) => c.value === formData.fromCountry);
-    const toCountryObj = countries.find((c) => c.value === formData.toCountry);
-    setFormData(prev => ({
+ useEffect(() => {
+  const fromCountryObj = countries.find((c) => c.value === formData.fromCountry);
+  const toCountryObj = countries.find((c) => c.value === formData.toCountry);
+
+  const newData = {
+    country: fromCountryObj ? fromCountryObj.label : "",
+    countrycode: fromCountryObj ? fromCountryObj.value.toLowerCase() : "",
+    countryId: fromCountryObj ? fromCountryObj.countryid : "",
+    recipientCountry: toCountryObj ? toCountryObj.label : "",
+    recipientCountryId: toCountryObj ? toCountryObj.countryid : "",
+    recipientcountrycode: toCountryObj ? toCountryObj.value.toLowerCase() : "",
+  };
+
+  const isChanged = Object.entries(newData).some(
+    ([key, value]) => formData[key] !== value
+  );
+
+  if (isChanged) {
+    setFormData((prev) => ({
       ...prev,
-      country: fromCountryObj ? fromCountryObj.label : "",
-      countrycode: fromCountryObj ? fromCountryObj.value.toLowerCase() : "",
-      countryId: fromCountryObj ? fromCountryObj.countryid : "",
-      recipientCountry: toCountryObj ? toCountryObj.label : "",
-      recipientCountryId: toCountryObj ? toCountryObj.countryid : "",
-      recipientcountrycode: toCountryObj ? toCountryObj.value.toLowerCase() : "",
+      ...newData,
     }));
-    setSamecountry(fromCountryObj && toCountryObj && fromCountryObj.value === toCountryObj.value);
-  }, [formData.fromCountry, formData.toCountry, countries, isGetrate]);
+  }
+
+  setSamecountry(
+    fromCountryObj &&
+    toCountryObj &&
+    fromCountryObj.value === toCountryObj.value
+  );
+}, [formData.fromCountry, formData.toCountry, countries]);
 
   return (
     <ContentBox>

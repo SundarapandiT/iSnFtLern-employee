@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -20,16 +20,16 @@ import {
   Menu,
   Checkbox,
   ListItemText,
-  TextField, // Added for search inputs
+  TextField,
 } from "@mui/material";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import DirectionsBoatIcon from "@mui/icons-material/DirectionsBoat";
 import CircularProgress from '@mui/material/CircularProgress';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { IconBox } from "../../styles/scheduleshipmentStyle";
 import { useStyles } from "../../styles/MyshipmentStyle";
 
-// Constants
 const STATUSES = [
   "New Request",
   "Cancelled",
@@ -55,7 +55,6 @@ const ShipmentDashboard = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  // State for search inputs
   const [searchInputs, setSearchInputs] = useState({
     shipmentdate: "",
     trackingnumber: "",
@@ -69,15 +68,26 @@ const ShipmentDashboard = () => {
     shipmentstatus: "",
   });
 
-  // Get user data
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
   const personId = user?.personID;
 
-  // Viewport meta tag handling
+  // Memoize searchInputs to stabilize reference
+  const stableSearchInputs = useMemo(() => searchInputs, [
+    searchInputs.shipmentdate,
+    searchInputs.trackingnumber,
+    searchInputs.fromcontactname,
+    searchInputs.fromcity,
+    searchInputs.fromstate,
+    searchInputs.tocontactname,
+    searchInputs.tocity,
+    searchInputs.tostate,
+    searchInputs.shipmenttype,
+    searchInputs.shipmentstatus,
+  ]);
+
   useEffect(() => {
     const meta = document.querySelector("meta[name=viewport]");
     const originalViewport = meta?.getAttribute("content");
-
     const viewportContent = "width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no";
 
     if (meta) {
@@ -96,15 +106,12 @@ const ShipmentDashboard = () => {
     };
   }, []);
 
-  // Fetch shipments using React Query
-  const { data: shipmentsData = [], isLoading, isError } = useQuery({
+  const { data: shipmentsData = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['shipments', personId],
     queryFn: async () => {
       if (!personId) throw new Error("Person ID not found");
-
       const { username, email } = getUserDetails();
       const userIP = await getUserIP();
-
       const encodedUrl = encryptURL("/shipment/myShipments");
       const response = await axios.post(`${api.BackendURL}/shipment/${encodedUrl}`, {
         data: {
@@ -118,50 +125,49 @@ const ShipmentDashboard = () => {
       if (!data) throw new Error("No shipment data");
       console.log("Shipment data:", data);
       return data.sort((a, b) => new Date(b.shipmentdate) - new Date(a.shipmentdate));
-
-
     },
     enabled: !!personId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
     onError: (error) => {
       console.error('Error fetching shipments:', error);
       toast.error("Failed to load shipments. Please try again.");
     }
   });
 
-
-  // Update filtered data when shipmentsData or searchInputs change
-  useEffect(() => {
+  // Memoize filtered data
+  const filteredDataMemo = useMemo(() => {
     let filtered = shipmentsData;
-
-    // Apply status filter
     if (selectedStatuses.length > 0 && selectedStatuses.length !== STATUSES.length) {
       filtered = filtered.filter(row => selectedStatuses.includes(row.shipmentstatus));
     }
-
-    // Apply search input filters
     filtered = filtered.filter(row => {
       const dateStr = new Date(row.shipmentdate).toLocaleDateString('en-GB').toLowerCase();
       return (
-        (!searchInputs.shipmentdate || dateStr.includes(searchInputs.shipmentdate.toLowerCase())) &&
-        (!searchInputs.trackingnumber || (row.trackingnumber ? row.trackingnumber.toLowerCase().includes(searchInputs.trackingnumber.toLowerCase()) : false)) &&
-        (!searchInputs.fromcontactname || row.fromcontactname.toLowerCase().includes(searchInputs.fromcontactname.toLowerCase())) &&
-        (!searchInputs.fromcity || row.fromcity.toLowerCase().includes(searchInputs.fromcity.toLowerCase())) &&
-        (!searchInputs.fromstate || row.fromstate.toLowerCase().includes(searchInputs.fromstate.toLowerCase())) &&
-        (!searchInputs.tocontactname || row.tocontactname.toLowerCase().includes(searchInputs.tocontactname.toLowerCase())) &&
-        (!searchInputs.tocity || row.tocity.toLowerCase().includes(searchInputs.tocity.toLowerCase())) &&
-        (!searchInputs.tostate || row.tostate.toLowerCase().includes(searchInputs.tostate.toLowerCase())) &&
-        (!searchInputs.shipmenttype || row.shipmenttype.toLowerCase().includes(searchInputs.shipmenttype.toLowerCase())) &&
-        (!searchInputs.shipmentstatus || row.shipmentstatus.toLowerCase().includes(searchInputs.shipmentstatus.toLowerCase()))
+        (!stableSearchInputs.shipmentdate || dateStr.includes(stableSearchInputs.shipmentdate.toLowerCase())) &&
+        (!stableSearchInputs.trackingnumber || (row.trackingnumber ? row.trackingnumber.toLowerCase().includes(stableSearchInputs.trackingnumber.toLowerCase()) : false)) &&
+        (!stableSearchInputs.fromcontactname || row.fromcontactname.toLowerCase().includes(stableSearchInputs.fromcontactname.toLowerCase())) &&
+        (!stableSearchInputs.fromcity || row.fromcity.toLowerCase().includes(stableSearchInputs.fromcity.toLowerCase())) &&
+        (!stableSearchInputs.fromstate || row.fromstate.toLowerCase().includes(stableSearchInputs.fromstate.toLowerCase())) &&
+        (!stableSearchInputs.tocontactname || row.tocontactname.toLowerCase().includes(stableSearchInputs.tocontactname.toLowerCase())) &&
+        (!stableSearchInputs.tocity || row.tocity.toLowerCase().includes(stableSearchInputs.tocity.toLowerCase())) &&
+        (!stableSearchInputs.tostate || row.tostate.toLowerCase().includes(stableSearchInputs.tostate.toLowerCase())) &&
+        (!stableSearchInputs.shipmenttype || row.shipmenttype.toLowerCase().includes(stableSearchInputs.shipmenttype.toLowerCase())) &&
+        (!stableSearchInputs.shipmentstatus || row.shipmentstatus.toLowerCase().includes(stableSearchInputs.shipmentstatus.toLowerCase()))
       );
     });
+    return filtered;
+  }, [shipmentsData, selectedStatuses, stableSearchInputs]);
 
-    setFilteredData(filtered);
-    setPage(0); // Reset to first page on filter change
-  }, [shipmentsData, selectedStatuses, searchInputs]);
+  // Update filteredData only if necessary
+  useEffect(() => {
+    // Avoid updating if filteredData is already equal to filteredDataMemo
+    if (JSON.stringify(filteredData) !== JSON.stringify(filteredDataMemo)) {
+      setFilteredData(filteredDataMemo);
+      setPage(0);
+    }
+  }, [filteredData, filteredDataMemo]);
 
-  // Handle search input changes
   const handleSearchInputChange = (field) => (event) => {
     setSearchInputs(prev => ({
       ...prev,
@@ -169,7 +175,6 @@ const ShipmentDashboard = () => {
     }));
   };
 
-  // Menu handling
   const open = Boolean(anchorEl);
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
@@ -194,7 +199,6 @@ const ShipmentDashboard = () => {
     try {
       const { username, email } = getUserDetails();
       const userIP = await getUserIP();
-
       const encodedUrl = encryptURL("/shipment/getmyShipments");
       const response = await axios.post(`${api.BackendURL}/shipment/${encodedUrl}`, {
         data: {
@@ -204,7 +208,6 @@ const ShipmentDashboard = () => {
           ip: userIP,
         }
       });
-
       if (response.status === 200 && response.data?.user) {
         navigate("/admin/MyShipmentNew", {
           state: { shipment: response.data.user },
@@ -219,7 +222,6 @@ const ShipmentDashboard = () => {
     }
   };
 
-  // Pagination handlers
   const handleRowsPerPageChange = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -265,11 +267,7 @@ const ShipmentDashboard = () => {
               onClose={handleClose}
               PaperProps={{
                 className: classes.menuPaper,
-                sx: {
-                  maxHeight: 260,
-                  padding: 0,
-                  mt: 0.5,
-                },
+                sx: { maxHeight: 260, padding: 0, mt: 0.5 },
               }}
               MenuListProps={{ dense: true }}
             >
@@ -302,21 +300,13 @@ const ShipmentDashboard = () => {
                   />
                 </MenuItem>
               ))}
-              <Box
-                className={classes.searchButtonContainer}
-                sx={{ px: 1, py: 0.5 }}
-              >
+              <Box className={classes.searchButtonContainer} sx={{ px: 1, py: 0.5 }}>
                 <Button
                   variant="contained"
                   color="secondary"
                   onClick={handleSearch}
                   className={classes.searchButton}
-                  sx={{
-                    fontSize: "0.65rem",
-                    py: 0.4,
-                    minHeight: "28px",
-                    width: "100%",
-                  }}
+                  sx={{ fontSize: "0.65rem", py: 0.4, minHeight: "28px", width: "100%" }}
                 >
                   Search
                 </Button>
@@ -330,143 +320,58 @@ const ShipmentDashboard = () => {
               <TableHead className={classes.tableHead}>
                 <TableRow>
                   {[
-                    "Date",
-                    "Tracking",
-                    "Sender",
-                    "City",
-                    "State",
-                    "Receiver",
-                    "City",
-                    "State",
-                    "Type",
-                    "Status",
-                    "Actions",
-                  ].map((heading) => (
+                    { label: "Date", key: "shipmentdate" },
+                    { label: "Tracking", key: "trackingnumber" },
+                    { label: "Sender", key: "fromcontactname" },
+                    { label: "City", key: "fromcity" },
+                    { label: "State", key: "fromstate" },
+                    { label: "Receiver", key: "tocontactname" },
+                    { label: "City", key: "tocity" },
+                    { label: "State", key: "tostate" },
+                    { label: "Type", key: "shipmenttype" },
+                    { label: "Status", key: "shipmentstatus" },
+                    { label: "Actions", key: "actions" },
+                  ].map((item) => (
                     <TableCell
-                      key={heading}
+                      key={item.key}
                       className={classes.tableCell}
                       sx={{ fontSize: "0.75rem" }}
                     >
-                      {heading}
+                      {item.label}
                     </TableCell>
                   ))}
                 </TableRow>
               </TableHead>
-              {/* Search Input Row */}
-              <TableRow className="table-row">
-                <TableCell className="small-cell">
-                  <TextField
-                    size="small"
-                    variant="standard"
-                    value={searchInputs.shipmentdate}
-                    onChange={handleSearchInputChange("shipmentdate")}
-                    InputProps={{
-                      style: { fontSize: "0.75rem" },
-                    }}
-                  />
-                </TableCell>
-                <TableCell className="small-cell">
-                  <TextField
-                    size="small"
-                    variant="standard"
-                    value={searchInputs.trackingnumber}
-                    onChange={handleSearchInputChange("trackingnumber")}
-                    InputProps={{
-                      style: { fontSize: "0.75rem" },
-                    }}
-                  />
-                </TableCell>
-                <TableCell className="small-cell">
-                  <TextField
-                    size="small"
-                    variant="standard"
-                    value={searchInputs.fromcontactname}
-                    onChange={handleSearchInputChange("fromcontactname")}
-                    InputProps={{
-                      style: { fontSize: "0.75rem" },
-                    }}
-                  />
-                </TableCell>
-                <TableCell className="small-cell">
-                  <TextField
-                    size="small"
-                    variant="standard"
-                    value={searchInputs.fromcity}
-                    onChange={handleSearchInputChange("fromcity")}
-                    InputProps={{
-                      style: { fontSize: "0.75rem" },
-                    }}
-                  />
-                </TableCell>
-                <TableCell className="small-cell">
-                  <TextField
-                    size="small"
-                    variant="standard"
-                    value={searchInputs.fromstate}
-                    onChange={handleSearchInputChange("fromstate")}
-                    InputProps={{
-                      style: { fontSize: "0.75rem" },
-                    }}
-                  />
-                </TableCell>
-                <TableCell className="small-cell">
-                  <TextField
-                    size="small"
-                    variant="standard"
-                    value={searchInputs.tocontactname}
-                    onChange={handleSearchInputChange("tocontactname")}
-                    InputProps={{
-                      style: { fontSize: "0.75rem" },
-                    }}
-                  />
-                </TableCell>
-                <TableCell className="small-cell">
-                  <TextField
-                    size="small"
-                    variant="standard"
-                    value={searchInputs.tocity}
-                    onChange={handleSearchInputChange("tocity")}
-                    InputProps={{
-                      style: { fontSize: "0.75rem" },
-                    }}
-                  />
-                </TableCell>
-                <TableCell className="small-cell">
-                  <TextField
-                    size="small"
-                    variant="standard"
-                    value={searchInputs.tostate}
-                    onChange={handleSearchInputChange("tostate")}
-                    InputProps={{
-                      style: { fontSize: "0.75rem" },
-                    }}
-                  />
-                </TableCell>
-                <TableCell className="small-cell">
-                  <TextField
-                    size="small"
-                    variant="standard"
-                    value={searchInputs.shipmenttype}
-                    onChange={handleSearchInputChange("shipmenttype")}
-                    InputProps={{
-                      style: { fontSize: "0.75rem" },
-                    }}
-                  />
-                </TableCell>
-                <TableCell className="small-cell">
-                  <TextField
-                    size="small"
-                    variant="standard"
-                    value={searchInputs.shipmentstatus}
-                    onChange={handleSearchInputChange("shipmentstatus")}
-                    InputProps={{
-                      style: { fontSize: "0.75rem" },
-                    }}
-                  />
-                </TableCell>
-                <TableCell className="small-cell"></TableCell> {/* Empty cell for Actions */}
-              </TableRow>
               <TableBody>
+                <TableRow className="table-row">
+                  {[
+                    { key: "shipmentdate", field: "shipmentdate" },
+                    { key: "trackingnumber", field: "trackingnumber" },
+                    { key: "fromcontactname", field: "fromcontactname" },
+                    { key: "fromcity", field: "fromcity" },
+                    { key: "fromstate", field: "fromstate" },
+                    { key: "tocontactname", field: "tocontactname" },
+                    { key: "tocity", field: "tocity" },
+                    { key: "tostate", field: "tostate" },
+                    { key: "shipmenttype", field: "shipmenttype" },
+                    { key: "shipmentstatus", field: "shipmentstatus" },
+                    { key: "actions", field: null },
+                  ].map((item) => (
+                    <TableCell key={item.key} className="small-cell">
+                      {item.field ? (
+                        <TextField
+                          size="small"
+                          variant="standard"
+                          value={searchInputs[item.field]}
+                          onChange={handleSearchInputChange(item.field)}
+                          InputProps={{
+                            style: { fontSize: "0.75rem" },
+                          }}
+                        />
+                      ) : null}
+                    </TableCell>
+                  ))}
+                </TableRow>
                 {isLoading ? (
                   <TableRow>
                     <TableCell colSpan={11} align="center">
@@ -476,7 +381,16 @@ const ShipmentDashboard = () => {
                 ) : isError ? (
                   <TableRow>
                     <TableCell colSpan={11} align="center" sx={{ fontSize: "0.75rem" }}>
-                      Error loading shipments
+                      Error loading shipments.{' '}
+                      <Button
+                        variant="text"
+                        color="primary"
+                        onClick={() => refetch()}
+                        sx={{ fontSize: "0.75rem" }}
+                        startIcon={<RefreshIcon />}
+                      >
+                        Retry
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ) : displayedRows.length > 0 ? (
@@ -495,18 +409,25 @@ const ShipmentDashboard = () => {
                       <TableCell className="small-cell">{row.shipmenttype}</TableCell>
                       <TableCell className="small-cell">{row.shipmentstatus}</TableCell>
                       <TableCell>
-                        <Box display="flex" alignItems="center" variant="contained" 
-                         onClick={() => handleEdit(row)} 
-                         sx={{fontSize:"12px",background:"#0c72e8",color:"white",p:1, borderRadius:"5px" ,cursor: "pointer"}}>
-                            <OpenInNewIcon
-                            sx={{
-                              color:"white"
-                            }}
+                        <Box
+                          display="flex"
+                          alignItems="center"
+                          variant="contained"
+                          onClick={() => handleEdit(row)}
+                          sx={{
+                            fontSize: "12px",
+                            background: "#0c72e8",
+                            color: "white",
+                            p: 1,
+                            borderRadius: "5px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <OpenInNewIcon
+                            sx={{ color: "white", marginRight: 1 }}
                             className={classes.editIcon}
-                            style={{ cursor: "pointer", marginRight: 8,color:"white"  }}
-                            onClick={() => handleEdit(row)}/>
-                          
-                            Open
+                          />
+                          Open
                         </Box>
                       </TableCell>
                     </TableRow>
@@ -564,21 +485,6 @@ const ShipmentDashboard = () => {
           </Button>
         </Box>
       </div>
-      {/* <Box className="footer-box">
-        <Typography
-          className={classes.footerTypography}
-          sx={{ mt: 2, fontSize: "0.75rem", textAlign: { xs: "center", sm: "right" } }}
-        >
-          All Rights Reserved. Site Powered by{" "}
-          <span
-            className={`${classes.sflLink} sfl-link`}
-            onClick={() => window.open("https://sflworldwide.com/", "_blank")}
-            style={{ cursor: "pointer" }}
-          >
-            SFL Worldwide
-          </span>
-        </Typography>
-      </Box> */}
     </div>
   );
 };

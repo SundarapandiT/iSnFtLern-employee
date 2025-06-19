@@ -56,31 +56,52 @@ const UserList = () => {
       <Card elevation={2}>
         <CardContent>
           {/* Header */}
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Box display="flex" alignItems="center">
-              <PeopleIcon
-                sx={{
-                  fontSize: 32,
-                  color: "white",
-                  backgroundColor: "#8e24aa",
-                  p: 1,
-                  borderRadius: 1,
-                  mr: 2
-                }}
-              />
-              <Typography variant="h6" fontWeight="bold" fontSize="16px">
-                User List
-              </Typography>
-            </Box>
-            <Button
-              variant="contained"
-              sx={{ backgroundColor: "#8e24aa", fontSize: "12px" }}
-              startIcon={<AddIcon />}
-            >
-              Add User
-            </Button>
-          </Box>
+       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+  <Box display="flex" alignItems="center" gap={1.5}>
+    <Box
+      sx={{
+        marginBottom:6,
+        position: "absolute",
+        width: 40,
+        height: 40,
+        backgroundColor: "#8e24aa",
+       
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#fff",
+        boxShadow: 3,
+         zIndex: 1,
+         padding:"30px"
+      }}
+    >
+      <PeopleIcon sx={{ fontSize: 26 }} />
+      
+    </Box>
+    <Typography
+      variant="h6"
+      sx={{
+        fontWeight: "bold",
+        fontSize: "16px",
+        display: "flex",
+        alignItems: "center",
+        marginLeft:9,
+        position: "absolute",
+        marginBottom:4,
+      }}
+    >
+      User List
+    </Typography>
+  </Box>
 
+  <Button
+    variant="contained"
+    sx={{ backgroundColor: "#8e24aa", fontSize: "12px",padding:"10px 16px",fontWeight:550  }}
+    // startIcon={<AddIcon />}
+  >
+    Add User
+  </Button>
+</Box>
           {/* Filters / Input Fields */}
           <Grid container spacing={2} mb={2}>
             <Grid item xs={12} sm={6} md={4}>
@@ -198,21 +219,20 @@ const UserList = () => {
             <Button
               variant="contained"
               color="error"
-              startIcon={<FileDownloadIcon />}
-              sx={{ fontSize: "12px" }}
+              sx={{ fontSize: "12px",padding:"10px",fontWeight:550}}
             >
-              Export
+              {<FileDownloadIcon />}
             </Button>
             <Button
               variant="contained"
-              sx={{ backgroundColor: "#ec407a", fontSize: "12px" }}
+              sx={{ backgroundColor: "#ec407a", fontSize: "12px",padding:"10px 16px",fontWeight:550 }}
               startIcon={<SearchIcon />}
             >
               Search
             </Button>
             <Button
               variant="contained"
-              sx={{ backgroundColor: "#9e9e9e", fontSize: "12px" }}
+              sx={{ backgroundColor: "#9e9e9e", fontSize: "12px",padding:"10px 16px",fontWeight:550  }}
               startIcon={<RestartAltIcon />}
               onClick={handleReset}
             >
