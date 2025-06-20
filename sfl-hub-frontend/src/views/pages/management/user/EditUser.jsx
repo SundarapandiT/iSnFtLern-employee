@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
@@ -14,6 +14,7 @@ import {
   Autocomplete,
   Paper,
   Popper,
+  CircularProgress,
 } from "@mui/material";
 import EditUserTabs from "./EditUserTabs";
 import { ContentBox, IconBox } from "../../../styles/scheduleshipmentStyle";
@@ -24,13 +25,15 @@ import PersonIcon from "@mui/icons-material/Person";
 import LocationCityIcon from "@mui/icons-material/LocationCity";
 import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
-import { api } from "../../../../utils/api";
+import { api,encryptURL } from "../../../../utils/api";
 import { toast } from "react-hot-toast";
+
 
 const EditUser = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const classes = useStyles();
+  const debounceRef = useRef(null);
   const [activeTab, setActiveTab] = useState("user-details");
   const [completedTabs, setCompletedTabs] = useState({
     "user-details": true,
@@ -38,6 +41,7 @@ const EditUser = () => {
     "markup-details": false,
     "documentation": false,
   });
+  const [errors, setErrors] = useState({ zip: "" });
 
   const [formData, setFormData] = useState(() => {
     const user = location.state?.user;
@@ -101,13 +105,36 @@ const EditUser = () => {
         iszipavailable: country.iszipavailable,
       }));
     },
-    staleTime: 24 * 60 * 60 * 1000, 
+    staleTime: 24 * 60 * 60 * 1000,
     retry: 2,
     onError: (error) => {
       console.error("Failed to fetch countries:", error);
       toast.error("Failed to load countries.");
     },
   });
+
+  // Fetch cities based on selected country
+  const selectedCountry = countries.find((country) => country.value === formData.country);
+  const { data: cities = [], isLoading: isCitiesLoading, isError: isCitiesError } = useQuery({
+    queryKey: ["cities", selectedCountry?.countryid],
+    queryFn: async () => {
+      if (!selectedCountry?.countryid) return [];
+      const response = await axios.post(`${api.BackendURL}/locations/getFedexCityList`, {
+        countryID: selectedCountry.countryid,
+        cityType: "FedEx",
+      }, { withCredentials: true });
+      return response.data.user[0].map(city => city.cityname);
+    },
+    enabled: !!selectedCountry?.countryid,
+    staleTime: 24 * 60 * 60 * 1000,
+    retry: 2,
+    onError: (error) => {
+      console.error("Failed to fetch cities:", error);
+      toast.error("Failed to load cities.");
+    },
+  });
+
+  const isZipAvailable = selectedCountry?.iszipavailable !== 0;
 
   const handleTabChange = (newTab) => {
     setActiveTab(newTab);
@@ -119,7 +146,116 @@ const EditUser = () => {
   };
 
   const handleCountryChange = (event, newValue) => {
-    setFormData((prev) => ({ ...prev, country: newValue ? newValue.value : "" }));
+    setFormData((prev) => ({
+      ...prev,
+      country: newValue ? newValue.value : "",
+      city: "",
+      state: "",
+      zip: "",
+    }));
+    setErrors((prev) => ({ ...prev, zip: "" }));
+  };
+
+  const handleCityChange = (event, newValue) => {
+    setFormData((prev) => ({ ...prev, city: newValue || "" }));
+  };
+
+  const handleZipCodeBlur = async () => {
+    if (!formData.zip || formData.zip.length < 3 || !isZipAvailable) {
+      setFormData((prev) => ({ ...prev, city: "", state: "" }));
+      setErrors((prev) => ({ ...prev, zip: "" }));
+      return;
+    }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(async () => {
+      console.log("Fetching city for zip code:", formData.zip, formData.country);
+
+      try {
+        const encodedUrl = encryptURL("/locations/getstateCitybyPostalCode");
+        const response = await axios.post(
+          `${api.BackendURL}/locations/${encodedUrl}`,
+          {
+            CountryID: selectedCountry?.countryid,
+            PostalCode: formData.zip,
+          },
+          { withCredentials: true }
+        );
+
+        const userData = response.data?.user?.[0] || [];
+        console.log("Custom API response:", userData);
+
+        if (userData.length > 0) {
+          const place = userData[0];
+          setFormData((prev) => ({
+            ...prev,
+            city: place.city,
+            state: place.state,
+          }));
+          setErrors((prev) => ({ ...prev, zip: "" }));
+          return;
+        }
+
+        throw new Error("No data from backend");
+      } catch (err) {
+        console.warn("Custom API failed or returned no data. Falling back...", err.message);
+
+        try {
+          if (formData.country === "in") {
+            const res = await axios.get(`https://api.postalpincode.in/pincode/${formData.zip}`);
+            const data = res.data[0];
+
+            console.log("India API response:", data);
+            if (data.Status === "Success" && data.PostOffice?.length > 0) {
+              const place = data.PostOffice[0];
+              setFormData((prev) => ({
+                ...prev,
+                city: place.Block || place.District,
+                state: place.State,
+              }));
+              setErrors((prev) => ({ ...prev, zip: "" }));
+              return;
+            } else {
+              throw new Error("No records from India API");
+            }
+          } else {
+            const res = await axios.get(
+              `https://maps.googleapis.com/maps/api/geocode/json?key=${import.meta.env.VITE_GOOGLE_API_KEY}&components=country:${formData.country}|postal_code:${formData.zip}`
+            );
+            const components = res.data.results?.[0]?.address_components || [];
+            console.log("Google API response:", components);
+
+            let city = "";
+            let state = "";
+
+            components.forEach(component => {
+              if (component.types.includes("locality") || component.types.includes("postal_town")) {
+                city = component.long_name;
+              }
+              if (component.types.includes("administrative_area_level_1")) {
+                state = component.long_name;
+              }
+            });
+
+            setFormData((prev) => ({
+              ...prev,
+              city,
+              state,
+            }));
+            setErrors((prev) => ({ ...prev, zip: "" }));
+          }
+        } catch (fallbackErr) {
+          console.error("All APIs failed:", fallbackErr.message);
+          setFormData((prev) => ({ ...prev, city: "", state: "" }));
+          setErrors((prev) => ({
+            ...prev,
+            zip: "Invalid or unsupported zip code.",
+          }));
+          toast.error("Invalid or unsupported zip code.");
+        }
+      }
+    }, 500);
   };
 
   const handleSave = () => {
@@ -142,7 +278,7 @@ const EditUser = () => {
       sx={{
         maxHeight: 200,
         overflowY: "auto",
-        mt: -30, // Move the dropdown above the field
+        mt: -30,
       }}
     />
   );
@@ -156,7 +292,7 @@ const EditUser = () => {
         {
           name: "offset",
           options: {
-            offset: [0, -8], // Adjust vertical spacing
+            offset: [0, -8],
           },
         },
       ]}
@@ -361,11 +497,11 @@ const EditUser = () => {
                     }}
                   />
                 )}
-                // renderOption={(props, option) => (
-                //   <li {...props} key={option.countryid} style={{ fontSize: "11px" }}>
-                //     {option.label}
-                //   </li>
-                // )}
+                renderOption={(props, option) => (
+                  <li {...props} key={option.countryid} style={{ fontSize: "11px" }}>
+                    {option.label}
+                  </li>
+                )}
                 noOptionsText={isCountriesError ? "Error loading countries" : "No countries found"}
               />
             </FormControl>
@@ -375,7 +511,12 @@ const EditUser = () => {
               className="custom-textfield"
               value={formData.zip}
               onChange={handleInputChange}
+              onBlur={handleZipCodeBlur}
               fullWidth
+              disabled={!isZipAvailable}
+              placeholder={!isZipAvailable ? "Not required" : undefined}
+              error={!!errors.zip}
+              helperText={errors.zip}
               inputProps={{
                 maxLength: 50,
                 autoComplete: "off",
@@ -386,23 +527,52 @@ const EditUser = () => {
                 startAdornment: <PersonIcon sx={{ color: "grey", mr: 1 }} />,
               }}
             />
-            <TextField
-              label="City"
-              name="city"
-              value={formData.city}
-              onChange={handleInputChange}
-              fullWidth
-              className="custom-textfield"
-              inputProps={{
-                maxLength: 50,
-                autoComplete: "off",
-                autoCorrect: "off",
-                autoCapitalize: "none",
-              }}
-              InputProps={{
-                startAdornment: <LocationCityIcon sx={{ color: "grey", mr: 1 }} />,
-              }}
-            />
+            <FormControl fullWidth className="custom-textfield">
+              <Autocomplete
+                id="city-autocomplete"
+                options={cities}
+                getOptionLabel={(option) => option || ""}
+                value={formData.city || null}
+                onChange={handleCityChange}
+                disabled={isCitiesLoading || isCitiesError || !selectedCountry}
+                PaperComponent={CustomPaper}
+                PopperComponent={CustomPopper}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="City"
+                    fullWidth
+                    className="custom-textfield"
+                    InputLabelProps={{
+                      shrink: true,
+                      sx: { fontSize: "11px", transform: "translate(14px, -6px) scale(0.75)" },
+                    }}
+                    inputProps={{
+                      ...params.inputProps,
+                      autoComplete: "off",
+                      autoCorrect: "off",
+                      autoCapitalize: "none",
+                    }}
+                    InputProps={{
+                      ...params.InputProps,
+                      startAdornment: <LocationCityIcon sx={{ color: "grey", mr: 1 }} />,
+                      endAdornment: (
+                        <>
+                          {isCitiesLoading && <CircularProgress size={20} />}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+                renderOption={(props, option) => (
+                  <li {...props} key={option} style={{ fontSize: "11px" }}>
+                    {option}
+                  </li>
+                )}
+                noOptionsText={isCitiesError ? "Error loading cities" : "No cities found"}
+              />
+            </FormControl>
             <TextField
               label="State"
               name="state"
@@ -410,6 +580,8 @@ const EditUser = () => {
               onChange={handleInputChange}
               fullWidth
               className="custom-textfield"
+              disabled={!isZipAvailable}
+              placeholder={!isZipAvailable ? "Not required" : undefined}
               inputProps={{
                 maxLength: 50,
                 autoComplete: "off",
