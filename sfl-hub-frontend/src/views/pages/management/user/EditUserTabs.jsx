@@ -19,7 +19,7 @@ const TabNavigation = ({ activeTab, handleTabClick }) => {
         <Button
           key={tab.value}
           onClick={() => handleTabClick(tab.value)}
-          className={`tab-button ${activeTab === tab.value ? "active-tab" : ""}`}
+          className={`tab-button-user ${activeTab === tab.value ? "active-tab" : ""}`}
         >
           {tab.label}
         </Button>

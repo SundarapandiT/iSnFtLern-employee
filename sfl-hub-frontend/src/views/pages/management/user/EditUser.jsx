@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Box, Button, TextField, MenuItem, Typography } from "@mui/material";
+import { Box, Button, TextField, MenuItem, Typography, Select } from "@mui/material";
 import EditUserTabs from "./EditUserTabs";
 import { ContentBox, IconBox } from "../../../styles/scheduleshipmentStyle";
 import { useStyles } from "../../../styles/MyshipmentStyle";
@@ -46,7 +46,7 @@ const EditUser = () => {
           email: user.email ,
           paperSize: "4 x 6",
           paperSizePreview: "Default",
-          userStatus: user.status ,
+          userStatus: user.status==="Active" ? "Enable" : "Disable",
           userType: user.usertype ,
         }
       : {
@@ -390,61 +390,65 @@ const EditUser = () => {
               }}
             />
             {/* Row 5 */}
-            <TextField
-              select
+            <Select
               label="Paper Size"
               name="paperSize"
               value={formData.paperSize}
               className="custom-textfield"
               onChange={handleInputChange}
               fullWidth
+               sx={{ fontSize: "11px",padding: "2px 0px"  }}
+               size="small"
             >
-              <MenuItem value="4 x 6">4 x 6</MenuItem>
-              <MenuItem value="4 x 6.75">4 x 6.75</MenuItem>
-              <MenuItem value="4 x 8">4 x 8</MenuItem>
-              <MenuItem value="4 x 9">4 x 9</MenuItem>
-              <MenuItem value="8.5 x 11">8.5 x 11</MenuItem>
-            </TextField>
-            <TextField
-              select
+              <MenuItem value="4 x 6" sx={{ fontSize: "11px" }}>4 x 6</MenuItem>
+              <MenuItem value="4 x 6.75" sx={{ fontSize: "11px" }}>4 x 6.75</MenuItem>
+              <MenuItem value="4 x 8" sx={{ fontSize: "11px" }}>4 x 8</MenuItem>
+              <MenuItem value="4 x 9" sx={{ fontSize: "11px" }}>4 x 9</MenuItem>
+              <MenuItem value="8.5 x 11" sx={{ fontSize: "11px" }}>8.5 x 11</MenuItem>
+            </Select>
+            <Select
               label="Paper Size Preview"
               name="paperSizePreview"
               className="custom-textfield"
               value={formData.paperSizePreview}
               onChange={handleInputChange}
               fullWidth
+               sx={{ fontSize: "11px",padding: "2px 0px" }}
+               size="small"
             >
-              <MenuItem value="4 x 6">4 x 6</MenuItem>
-              <MenuItem value="4 x 6.75">4 x 6.75</MenuItem>
-              <MenuItem value="4 x 8">4 x 8</MenuItem>
-              <MenuItem value="4 x 9">4 x 9</MenuItem>
-              <MenuItem value="8.5 x 11">8.5 x 11</MenuItem>
-            </TextField>
-            <TextField
-              select
+              <MenuItem value="4 x 6" sx={{ fontSize: "11px" }}>4 x 6</MenuItem>
+              <MenuItem value="4 x 6.75" sx={{ fontSize: "11px" }}>4 x 6.75</MenuItem>
+              <MenuItem value="4 x 8" sx={{ fontSize: "11px" }}>4 x 8</MenuItem>
+              <MenuItem value="4 x 9" sx={{ fontSize: "11px" }}>4 x 9</MenuItem>
+              <MenuItem value="8.5 x 11" sx={{ fontSize: "11px" }}>8.5 x 11</MenuItem>
+            </Select>
+            <Select
               label="User Status"
               name="userStatus"
               className="custom-textfield"
               value={formData.userStatus}
               onChange={handleInputChange}
               fullWidth
+               sx={{ fontSize: "11px",padding: "2px 0px"  }}
+               size="small"
             >
-              <MenuItem value="Enable">Enable</MenuItem>
-              <MenuItem value="Disable">Disable</MenuItem>
-            </TextField>
-            <TextField
-              select
+              <MenuItem value="Enable" sx={{ fontSize: "11px" }}>Enable</MenuItem>
+              <MenuItem value="Disable" sx={{ fontSize: "11px" }}>Disable</MenuItem>
+            </Select>
+            <Select
               label="User Type"
               name="userType"
               className="custom-textfield"
               value={formData.userType}
               onChange={handleInputChange}
               fullWidth
+               sx={{ fontSize: "11px",padding: "2px 0px"  }}
+               size="small"
             >
-              <MenuItem value="Employee">Employee</MenuItem>
-              <MenuItem value="Customer">Customer</MenuItem>
-              <MenuItem value="Contractor">Contractor</MenuItem>
-            </TextField>
+              <MenuItem value="Employee" sx={{ fontSize: "11px" }}>Employee</MenuItem>
+              <MenuItem value="Customer" sx={{ fontSize: "11px" }}>Customer</MenuItem>
+              <MenuItem value="Contractor" sx={{ fontSize: "11px" }}>Contractor</MenuItem>
+            </Select>
           </Box>
         </ContentBox>
       )}

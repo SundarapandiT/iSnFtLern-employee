@@ -21,11 +21,29 @@
   position: relative;
   z-index: 1;
   transition: all 0.2s ease;
-  width: calc(100% / 4 - 16px); /* Adjust width for four tabs */
+  width: calc(100% / 5 - 16px); /* Adjust width for five tabs */
   text-align: center;
 }
 
+.tab-button-user {
+  background: transparent;
+  font-size: smaller !important;
+  color: #000000 !important;
+  border: none;
+  padding: 10px 20px !important;
+  border-radius: 4px 4px 0 0;
+  font-weight: 500;
+  position: relative;
+  z-index: 1;
+  transition: all 0.2s ease;
+  width: calc(100% / 4 - 16px); /* Adjust width for four tabs */
+  text-align: center;
+}
 .tab-button:hover {
+  background: #f44336;
+  color: #fff !important;
+}
+.tab-button-user:hover {
   background: #f44336;
   color: #fff !important;
 }
@@ -51,7 +69,7 @@
 
 
 @media screen and (max-width: 600px) {
-  .tab-button {
+  .tab-button-user {
     width: calc(100% / 2 - 12px); /* Adjust width for two tabs on smaller screens */
   }
   
