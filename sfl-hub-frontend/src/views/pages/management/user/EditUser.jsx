@@ -27,7 +27,7 @@ import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import { api,encryptURL } from "../../../../utils/api";
 import { toast } from "react-hot-toast";
-
+import AccessTable from "./AccessDetails";
 
 const EditUser = () => {
   const navigate = useNavigate();
@@ -303,7 +303,7 @@ const EditUser = () => {
     <Box sx={{ p: 3, backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
       <EditUserTabs
         activeTab={activeTab}
-        setActiveTab={handleTabChange}
+        handleTabClick={handleTabChange}
         isMobile={isMobile}
         completedTabs={completedTabs}
       />
@@ -748,6 +748,17 @@ const EditUser = () => {
           </Box>
         </ContentBox>
       )}
+      {activeTab === "access-details" && (
+  <ContentBox sx={{ margin: "3rem", width: "100%", marginLeft: "0rem" }}>
+    <Typography variant="h5" sx={{ mb: 3, fontSize: "1.3rem" }}>
+      <IconBox className="card-icon">
+        <AccountCircleIcon className={classes.iconBox} />
+      </IconBox>
+      Access Details
+    </Typography>
+    <AccessTable user={location.state?.user} />
+  </ContentBox>
+)}
 
       <Box sx={{ mt: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Box>

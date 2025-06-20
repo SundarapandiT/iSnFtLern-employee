@@ -9,7 +9,7 @@ const TabNavigation = ({ activeTab, handleTabClick }) => {
 
   const tabs = [
     { label: "USER DETAILS" ,value: "user-details"},
-    { label: "ACCESS DETAILS",vaue:"access-details" },
+    { label: "ACCESS DETAILS",value:"access-details" },
     { label: "MARKUP DETAILS",value: "markup-details" },
     { label: "DOCUMENTATION",value:"documentation" },
   ];
