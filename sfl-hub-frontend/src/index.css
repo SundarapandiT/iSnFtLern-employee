@@ -553,11 +553,14 @@ form .MuiFormHelperText-root {
 .custom-textfield .MuiInputLabel-root {
   font-size: 0.9rem;
   font-family: sans-serif;
-  transform: translate(14px, 50%) scale(1); 
-  transform-origin: top left; 
+  transform: translate(14px, 50%) scale(1);
+  transform-origin: top left;
   padding: 0; 
   &.MuiInputLabel-shrink {
-    transform: translate(14px, -6px) scale(0.75); 
+    transform: translate(14px, -8px) scale(0.75); 
+    /* width: calc(100% / 0.75 - 28px);  */
+    background: #ffff;
+    padding: 0  2px; 
   }
 }
 .custom-textfield .MuiPaper-root {

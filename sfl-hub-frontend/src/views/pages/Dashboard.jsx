@@ -29,6 +29,7 @@ import ManagementDashboard from './management/ManagementDashboard';
 import UserList from './management/UserList';
 import Footer from './Footer';
 import EditUser from './management/user/EditUser';
+import { UserListProvider } from './management/UserListContext';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -167,8 +168,9 @@ const Dashboard = () => {
                         />
                         <Route path="/profilepage" element={<ProfilePage />} />
                         <Route path="/managementnavigation" element={<ManagementDashboard />} />
-                        <Route path="/userlist" element={<UserList />} />
-                        <Route path='/EditUser' element={<EditUser />} />
+
+                        <Route path="/userlist" element={<UserListProvider><UserList /></UserListProvider>} />
+                        <Route path='/EditUser' element={<UserListProvider><EditUser /></UserListProvider>} />
                         <Route
                             path="/"
                             element={

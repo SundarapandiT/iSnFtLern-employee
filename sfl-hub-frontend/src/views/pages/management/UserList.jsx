@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"; // Import axios
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import {
   Box,
   Button,
@@ -19,45 +20,25 @@ import {
   Typography,
 } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
-import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
-import EditIcon from '@mui/icons-material/Edit';
+import EditIcon from "@mui/icons-material/Edit";
 
 import { api } from "../../../utils/api";
+import { useUserListContext } from "./UserListContext";
 
 const UserList = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    name: "",
-    userName: "",
-    userType: "",
-    email: "",
-    createdOn: "",
-    accountNumber: "",
-    managedBy: "",
-    status: ""
-  });
+  const context = useUserListContext();
 
-  const [searchFilters, setSearchFilters] = useState({
-    name: "",
-    userName: "",
-    userType: "",
-    email: "",
-    createdOn: "",
-    accountNumber: "",
-    managedBy: "",
-    status: ""
-  });
+  if (!context) {
+    return <Typography color="error">Error: UserListContext is not available. Please wrap the component with UserListProvider.</Typography>;
+  }
 
-  const [userData, setUserData] = useState([
-    { name: "Lokesh Agarwal", loginid: "lokeshwebment", usertype: "Employee", email: "lokesh@webment.com", createdon: "2025-06-01T10:00:00Z", accountnumber: "125655", managedbyname: "Admin", status: "Enable" },
-    { name: "Anshul Sharma", loginid: "anshul123", usertype: "Contractor", email: "anshul@example.com", createdon: "2025-06-05T12:00:00Z", accountnumber: "125656", managedbyname: "Manager", status: "Disable" },
-    { name: "Priya Singh", loginid: "priya789", usertype: "Customer", email: "priya@demo.com", createdon: "2025-06-10T09:00:00Z", accountnumber: "125657", managedbyname: "Supervisor", status: "Enable" },
-    { name: "Ravi Kumar", loginid: "ravi456", usertype: "Employee", email: "ravi@company.com", createdon: "2025-06-15T14:00:00Z", accountnumber: "125658", managedbyname: "Admin", status: "Enable" },
-  ]);
-  const [loading, setLoading] = useState(false);
+  const { formData, setFormData, searchFilters, setSearchFilters, resetFormData } = context;
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleChange = (field) => (event) => {
     setFormData((prev) => ({ ...prev, [field]: event.target.value }));
@@ -68,32 +49,13 @@ const UserList = () => {
   };
 
   const handleReset = () => {
-    setFormData({
-      name: "",
-      userName: "",
-      userType: "",
-      email: "",
-      createdOn: "",
-      accountNumber: "",
-      managedBy: "",
-      status: ""
-    });
-    setSearchFilters({
-      name: "",
-      userName: "",
-      userType: "",
-      email: "",
-      createdOn: "",
-      accountNumber: "",
-      managedBy: "",
-      status: ""
-    });
-    setUserData([]);
+    resetFormData();
+    setCurrentPage(1);
   };
 
-  const fetchUserList = async () => {
-    setLoading(true);
-    try {
+  const { data: userData = [], isLoading, refetch } = useQuery({
+    queryKey: ['userList', formData],
+    queryFn: async () => {
       const response = await axios.post(`${api.BackendURL}/users/getUserList`, {
         userDetails: {
           Name: formData.name,
@@ -102,59 +64,77 @@ const UserList = () => {
           Email: formData.email,
           AccountNumber: formData.accountNumber,
           ManagedBy: formData.managedBy,
-          Status: formData.status
-        }
+          Status: formData.status,
+        },
       }, {
         headers: {
           "Content-Type": "application/json",
-        }
+        },
       });
-      if (response.data.resResult) {
-        setUserData(response.data.resResult);
-      } else {
-        setUserData([]);
-      }
-    } catch (error) {
-      console.error("Error fetching user list:", error);
-      setUserData([]);
-    }
-    setLoading(false);
+      return response.data.resResult || [];
+    },
+    enabled: false, 
+  });
+
+  const FetchUserList = () => {
+    refetch();
   };
 
-  // Filter data based on search inputs with improved handling
-  const filteredData = userData.filter((row) => {
-  return Object.keys(searchFilters).every((key) => {
-    const searchValue = searchFilters[key] || "";
-    let rowValue = row[key] || "";
+  const filteredData = userData.filter((row) =>
+    Object.keys(searchFilters).every((key) => {
+      const searchValue = searchFilters[key] || "";
+      let rowValue = row[key] || "";
 
-    if (key === "name") rowValue = row.name || "";
-    if (key === "userName") rowValue = row.loginid || "";
-    if (key === "userType") rowValue = row.usertype || "";
-    if (key === "email") rowValue = row.email || "";
-    if (key === "createdOn") rowValue = row.createdon ? new Date(row.createdon).toLocaleDateString() : "";
-    if (key === "accountNumber") rowValue = row.accountnumber || "";
-    if (key === "managedBy") rowValue = row.managedbyname || "";
-    if (key === "status") rowValue = row.status || "";
-    if (key === "personid") rowValue = row.personid || "";
-    if (key === "phonenum") rowValue = row.phonenum || "";
-    if (key === "addressline1") rowValue = row.addressline1 || "";
-    if (key === "addressline2") rowValue = row.addressline2 || "";
-    if (key === "addressline3") rowValue = row.addressline3 || "";
-    if (key === "city") rowValue = row.city || "";
-    if (key === "companyname") rowValue = row.companyname || "";
-    if (key === "state") rowValue = row.state || "";
-    if (key === "zipcode") rowValue = row.zipcode || "";
+      if (key === "name") rowValue = row.name || "";
+      if (key === "userName") rowValue = row.loginid || "";
+      if (key === "userType") rowValue = row.usertype || "";
+      if (key === "email") rowValue = row.email || "";
+      if (key === "createdOn") rowValue = row.createdon ? new Date(row.createdon).toLocaleDateString() : "";
+      if (key === "accountNumber") rowValue = row.accountnumber || "";
+      if (key === "managedBy") rowValue = row.managedbyname || "";
+      if (key === "status") rowValue = row.status || "";
+      if (key === "personid") rowValue = row.personid || "";
+      if (key === "phonenum") rowValue = row.phonenum || "";
+      if (key === "addressline1") rowValue = row.addressline1 || "";
+      if (key === "addressline2") rowValue = row.addressline2 || "";
+      if (key === "addressline3") rowValue = row.addressline3 || "";
+      if (key === "city") rowValue = row.city || "";
+      if (key === "companyname") rowValue = row.companyname || "";
+      if (key === "state") rowValue = row.state || "";
+      if (key === "zipcode") rowValue = row.zipcode || "";
 
-    rowValue = rowValue.toString().toLowerCase();
-    return searchValue === "" || rowValue.includes(searchValue.toLowerCase());
-  });
-});
+      rowValue = rowValue.toString().toLowerCase();
+      return searchValue === "" || rowValue.includes(searchValue.toLowerCase());
+    })
+  );
+
+  const totalRows = filteredData.length;
+  const totalPages = Math.ceil(totalRows / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+
+  const handleRowsPerPageChange = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setCurrentPage(1);
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   return (
     <Box sx={{ p: { xs: 1, sm: 3 } }}>
       <Card elevation={2}>
         <CardContent>
-          {/* Header */}
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
             <Box display="flex" alignItems="center" gap={1.5}>
               <Box
@@ -170,7 +150,7 @@ const UserList = () => {
                   color: "#fff",
                   boxShadow: 3,
                   zIndex: 1,
-                  padding: "30px"
+                  padding: "30px",
                 }}
               >
                 <PeopleIcon sx={{ fontSize: 20 }} />
@@ -193,13 +173,12 @@ const UserList = () => {
             <Button
               variant="contained"
               sx={{ backgroundColor: "#8e24aa", fontSize: { xs: "8px", sm: "10px" }, padding: "10px 15px", fontWeight: 550 }}
-              onClick={() => navigate('/admin/AddUser')}
+              onClick={() => navigate("/admin/AddUser")}
             >
               Add User
             </Button>
           </Box>
 
-          {/* Filters / Input Fields */}
           <Grid container spacing={1} mb={2} sx={{ flexDirection: { xs: "column", sm: "row" } }}>
             <Grid item xs={12} sm={6} md={4} mb={2}>
               <TextField
@@ -309,20 +288,19 @@ const UserList = () => {
             </Grid>
           </Grid>
 
-          {/* Buttons */}
           <Box display="flex" justifyContent="flex-end" gap={2} mb={2} flexWrap="wrap">
             <Button
               variant="contained"
               color="error"
               sx={{ fontSize: { xs: "8px", sm: "10px" }, padding: "6px", fontWeight: 550 }}
             >
-              {<FileDownloadIcon />}
+              <FileDownloadIcon />
             </Button>
             <Button
               variant="contained"
               sx={{ backgroundColor: "#ec407a", fontSize: { xs: "8px", sm: "10px" }, padding: "10px 15px", fontWeight: 550 }}
               startIcon={<SearchIcon />}
-              onClick={fetchUserList}
+              onClick={FetchUserList}
             >
               Search
             </Button>
@@ -336,7 +314,6 @@ const UserList = () => {
             </Button>
           </Box>
 
-          {/* Table */}
           <TableContainer>
             <Table size="small">
               <TableHead>
@@ -350,7 +327,7 @@ const UserList = () => {
                     "Account No.",
                     "Managed By",
                     "Status",
-                    "Actions"
+                    "Actions",
                   ].map((header, i) => (
                     <TableCell
                       key={i}
@@ -375,7 +352,7 @@ const UserList = () => {
                               fontSize: "10px",
                               borderBottom: "1px solid rgba(0,0,0,0.23)",
                               padding: 0,
-                            }
+                            },
                           }}
                           variant="standard"
                         />
@@ -385,14 +362,14 @@ const UserList = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {loading ? (
+                {isLoading ? (
                   <TableRow>
                     <TableCell colSpan={9} align="center" sx={{ fontSize: "10px" }}>
                       Loading...
                     </TableCell>
                   </TableRow>
-                ) : filteredData.length > 0 ? (
-                  filteredData.map((row, index) => (
+                ) : paginatedData.length > 0 ? (
+                  paginatedData.map((row, index) => (
                     <TableRow key={index}>
                       <TableCell sx={{ fontSize: "11px", whiteSpace: "normal", wordWrap: "break-word" }}>{row.name}</TableCell>
                       <TableCell sx={{ fontSize: "11px", whiteSpace: "normal", wordWrap: "break-word" }}>{row.loginid}</TableCell>
@@ -405,7 +382,11 @@ const UserList = () => {
                       <TableCell sx={{ fontSize: "11px", whiteSpace: "normal", wordWrap: "break-word" }}>{row.managedbyname || ""}</TableCell>
                       <TableCell sx={{ fontSize: "11px", whiteSpace: "normal", wordWrap: "break-word" }}>{row.status}</TableCell>
                       <TableCell sx={{ fontSize: "11px", whiteSpace: "normal", wordWrap: "break-word" }}>
-                        <EditIcon sx={{ fontSize: "19px", cursor: "pointer", border: "1px solid blue" }} color="primary" onClick={() => navigate('/admin/EditUser', { state: { user: row } })} />
+                        <EditIcon
+                          sx={{ fontSize: "19px", cursor: "pointer", border: "1px solid blue" }}
+                          color="primary"
+                          onClick={() => navigate("/admin/EditUser", { state: { user: row } })}
+                        />
                       </TableCell>
                     </TableRow>
                   ))
@@ -420,7 +401,6 @@ const UserList = () => {
             </Table>
           </TableContainer>
 
-          {/* Pagination */}
           <Box
             mt={2}
             display="flex"
@@ -429,15 +409,21 @@ const UserList = () => {
             flexWrap="wrap"
             sx={{ flexDirection: { xs: "column", sm: "row" }, gap: { xs: 1, sm: 0 } }}
           >
-            <Button variant="outlined" disabled sx={{ fontSize: "10px" }}>
+            <Button
+              variant="outlined"
+              disabled={currentPage === 1}
+              onClick={handlePreviousPage}
+              sx={{ fontSize: "10px" }}
+            >
               Previous
             </Button>
             <Typography sx={{ fontSize: "10px" }}>
-              Total rows : {filteredData.length}    1 of 1
+              Total rows: {totalRows} | Page {currentPage} of {totalPages}
             </Typography>
             <Select
               variant="standard"
-              defaultValue={10}
+              value={rowsPerPage}
+              onChange={handleRowsPerPageChange}
               size="small"
               sx={{ minWidth: 120, fontSize: "10px", "& .MuiSelect-select": { borderBottom: "1px solid rgba(0,0,0,0.23)" } }}
             >
@@ -445,7 +431,12 @@ const UserList = () => {
               <MenuItem value={25} sx={{ fontSize: "10px" }}>25 rows</MenuItem>
               <MenuItem value={50} sx={{ fontSize: "10px" }}>50 rows</MenuItem>
             </Select>
-            <Button variant="outlined" disabled sx={{ fontSize: "10px" }}>
+            <Button
+              variant="outlined"
+              disabled={currentPage === totalPages}
+              onClick={handleNextPage}
+              sx={{ fontSize: "10px" }}
+            >
               Next
             </Button>
           </Box>
